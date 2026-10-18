@@ -12,11 +12,11 @@ Keine Musiksynchronisierung. Vor Änderungen ein vollständiges HA-Backup erstel
 
 ## Installation mit HACS
 
-Voraussetzungen: Home Assistant ab 2024.7 (API-Untergrenze, kein Nachweis aller getesteten Versionen), HACS und eingerichtete MQTT-Integration. Für native Dymera-Effekte Zigbee2MQTT mit Basistopic `zigbee2mqtt`.
+Voraussetzungen: Home Assistant ab 2024.7 (API-Untergrenze, kein Nachweis aller getesteten Versionen), HACS und eingerichtete MQTT-Integration. Für native Dymera-Effekte Zigbee2MQTT.
 
 1. HACS öffnen → Menü ⋮ → **Benutzerdefinierte Repositories**.
 2. `https://github.com/KrOiiDzeR/lightshow-studio` eintragen, Typ **Integration** auswählen und hinzufügen.
-3. Lightshow Studio öffnen und herunterladen. Für Beta-Releases gegebenenfalls **Beta-/Vorabversionen anzeigen** aktivieren bzw. die Beta im Download-Dialog auswählen; die Bezeichnung hängt von der HACS-Version ab.
+3. Lightshow Studio öffnen und herunterladen. Die Beta gegebenenfalls unter **Benötigst du eine andere Version? → Release** auswählen. Für spätere Beta-Updates unter **Einstellungen → Geräte & Dienste → Entitäten** nach Lightshow Studio suchen, auch deaktivierte Entitäten einblenden, die HACS-Entität **Pre-release** aktivieren und anschließend einschalten.
 4. In `configuration.yaml` einmal auf oberster Ebene ergänzen:
 
    ```yaml
@@ -25,7 +25,7 @@ Voraussetzungen: Home Assistant ab 2024.7 (API-Untergrenze, kein Nachweis aller 
 
 5. Home Assistant neu starten und Protokolle prüfen.
 6. Unter **Einstellungen → Dashboards → Ressourcen** folgende Ressource als **JavaScript-Modul** eintragen:
-   `/lightshow_studio/lightshow-studio.js?v=2.0.0-beta.2`
+   `/lightshow_studio/lightshow-studio.js?v=2.0.0-beta.3`
 7. Manuelle Dashboard-Karte hinzufügen:
 
    ```yaml
@@ -61,6 +61,20 @@ Alte Dashboard-Karte und alte JS-Ressource nach erfolgreicher Prüfung entfernen
 
 Standard: transparente Außenfläche ohne Verlauf und Schatten. Innenflächen übernehmen die Kartenfarbe des aktiven HA-Themes; Text, Rahmen und Fehlerhinweise dessen Farben. Event-Akzente bleiben farbig.
 Für eine klassische Kartenfläche `background: theme` verwenden. Keine Zusatzkarte und kein card-mod erforderlich.
+
+## Zigbee2MQTT-Erkennung und natives Tempo
+
+Ab beta.3 erkennt Studio die Geräteliste über `+/bridge/devices` automatisch. Der erkannte Topic-Prefix bleibt exakt erhalten; `Zigbee2mqtt` und `zigbee2mqtt` sind unterschiedliche MQTT-Themen.
+Unter **Lampen** wird die Anzahl erkannter Geräte angezeigt. **Erkennen** ordnet vorhandene HA-Lampen anhand der Gerätekennung zu. Zuordnungen prüfen und speichern. Je Dymera verwenden oben/unten denselben Gerätenamen und unterschiedliche Lichtbereiche.
+
+Für einen verschachtelten Prefix oder mehrere Bridges mit gleich benannten Geräten kann eine Bridge ausdrücklich gewählt werden:
+
+```yaml
+lightshow_studio:
+  mqtt_base_topic: home/garden/zigbee
+```
+
+Nach einer YAML-Änderung Home Assistant neu starten. Kein Broker-Passwort nötig; Studio verwendet die bestehende MQTT-Integration. Ohne passende Geräteliste bleibt die HA-Steuerung verfügbar. Die Tempo-Einstellung wirkt bei direkt erkannten Dymera-Geräten auf den nativen Effekt; sie beschleunigt keine beliebigen HA-Effekte anderer Lampen.
 
 ## Bedienung
 
