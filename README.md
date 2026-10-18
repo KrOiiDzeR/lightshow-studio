@@ -1,119 +1,151 @@
 # ✨ Lightshow Studio
 
 Lokale Lichtshows für Home Assistant: Halloween, Weihnachten, Party und Ambiente.
-Wiederverwendbare JSON-Pakete, Szenen, Show-Abläufe, jährliche Zeitpläne und eine gemeinsame Lampenzuordnung.
-Besondere Unterstützung für Philips Hue Dymera über Zigbee2MQTT, getrennt nach oben/unten.
+Szenen, JSON-Pakete, Show-Abläufe, Shuffle, Wind, Jahreszeiten und Wochenprogramm.
+Philips Hue Dymera wird über Zigbee2MQTT getrennt nach oben/unten unterstützt.
 
-![Lightshow Studio im dunklen Theme](docs/dashboard-dark.png)
+**Version 2.1.0-beta.6.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
+Voraussetzungen: Home Assistant **2026.10 oder neuer**, HACS und für native Dymera-Steuerung eine eingerichtete MQTT-/Zigbee2MQTT-Anbindung.
+Die Integration bleibt eine Beta. Automatische Prüfungen und Browserprüfungen mit Beispieldaten ersetzen keinen vollständigen Hardwaretest; den genauen Stand dokumentiert [VALIDATION.md](docs/VALIDATION.md).
 
-**Status: 2.0 Beta.** Noch kein vollständiger Laufzeit-/Hardwaretest mit Home Assistant und Dymera.
-Native Effekte hängen von Firmware und Gerät ab; andere HA-Lampen erhalten unterstützte Effekte oder ein statisches Fallback.
-Keine Musiksynchronisierung. Vor Änderungen ein vollständiges HA-Backup erstellen.
+![Bedienung im Dashboard](docs/dev-dashboard-dark.png)
 
-## Installation mit HACS
+## Unabhängige Bereiche und parallele Shows
 
-Voraussetzungen: Home Assistant ab 2024.7 (API-Untergrenze, kein Nachweis aller getesteten Versionen), HACS und eingerichtete MQTT-Integration. Für native Dymera-Effekte Zigbee2MQTT.
+Unter **Integration → Konfiguration → Bereiche → Bereich anlegen** beispielsweise Außenwand, Garten, Badewanne und Pool hinzufügen.
+Name und Symbol im eingebauten Formular eingeben und **Bereich erstellen** drücken (oder die Eingabetaste). Dafür sind keine Browser-Pop-ups erforderlich. **Abbrechen** verwirft das neue Formular, ohne einen Bereich anzulegen.
+Oben den gewünschten Bereich wählen und anschließend unter **Lampen**, **Editor** und **Pakete** dessen eigene Einrichtung festlegen.
+Jeder neue Bereich beginnt mit einer leeren Lampenliste und eigenen Kopien der eingebauten Pakete.
+Bearbeitete Szenen, Abläufe, importierte Pakete, Shuffle/Wind und Zeitpläne gelten ausschließlich für den gewählten Bereich.
+Bis zu 30 Bereiche sind möglich; der MQTT-Anschluss bleibt gemeinsam.
 
-1. HACS öffnen → Menü ⋮ → **Benutzerdefinierte Repositories**.
-2. `https://github.com/KrOiiDzeR/lightshow-studio` eintragen, Typ **Integration** auswählen und hinzufügen.
-3. Lightshow Studio öffnen und herunterladen. Die Beta gegebenenfalls unter **Benötigst du eine andere Version? → Release** auswählen. Für spätere Beta-Updates unter **Einstellungen → Geräte & Dienste → Entitäten** nach Lightshow Studio suchen, auch deaktivierte Entitäten einblenden, die HACS-Entität **Pre-release** aktivieren und anschließend einschalten.
-4. In `configuration.yaml` einmal auf oberster Ebene ergänzen:
+Das Dashboard zeigt pro Bereich Bereitschaft, laufende Show oder Vorschau, Lampenanzahl, Paket und Szene/Ablauf sowie Hinweise.
+Bereich anklicken, Szene oder Ablauf wählen und starten. Andere Bereiche laufen unabhängig weiter.
+**Stopp & zurücksetzen** betrifft im Dashboard immer den ausgewählten Bereich.
+Die Bereichsauswahl merkt sich die zuletzt ausgewählte Szene innerhalb der geöffneten Karte.
 
-   ```yaml
-   lightshow_studio:
-   ```
+Eine HA-Lichtentität darf nur einem Bereich zugeordnet sein, auch wenn sie dort deaktiviert ist.
+Das verhindert konkurrierende Steuerung und unzuverlässiges Rücksetzen derselben Entität.
+Zum Verschieben die Lampe im bisherigen Bereich entfernen und speichern, anschließend im anderen Bereich hinzufügen.
+Unterschiedliche HA-Gruppen können dieselben physischen Lampen enthalten; solche indirekten Überschneidungen werden nicht automatisch erkannt.
 
-5. Home Assistant neu starten und Protokolle prüfen.
-6. Unter **Einstellungen → Dashboards → Ressourcen** folgende Ressource als **JavaScript-Modul** eintragen:
-   `/lightshow_studio/lightshow-studio.js?v=2.0.0-beta.3`
-7. Manuelle Dashboard-Karte hinzufügen:
+Die vollständige Sicherung unter **Pakete** enthält alle Bereiche. Ein v2-Einzelexport kann weiterhin im gewählten Bereich wiederhergestellt werden.
+Eine vollständige Bereichssicherung ersetzt beim Speichern alle Bereiche und erfordert, dass alle Shows/Vorschauen beendet sind.
+Laufende Bereiche können nicht gelöscht werden; der letzte Bereich bleibt immer erhalten.
 
-   ```yaml
-   type: custom:lightshow-studio
-   background: transparent
-   ```
+![Zwei parallel laufende Shows mit Beispieldaten](docs/dev-parallel-areas.png)
 
-HACS installiert Backend und Karte gemeinsam. Es gibt kein zusätzliches Frontend-Repository.
-Die YAML-Aktivierung und einmalige Ressourcenregistrierung sind in dieser Beta weiterhin erforderlich.
-Die Integration hat noch keinen Einrichtungsdialog unter „Geräte & Dienste“.
+## Einrichtung und Bedienung
 
-## Von der manuellen v2-Beta zu HACS — Einstellungen behalten
+| Bereich | Funktionen |
+| --- | --- |
+| Integration → Konfiguration | Bereiche anlegen/benennen/löschen, Zigbee2MQTT-Anbindung, Lampen suchen/zuordnen, Gruppen und Dymera-Bereiche |
+| Integration → Konfiguration | Szenen, Effekte, Ausnahmen, Show-Abläufe bearbeiten und testen |
+| Integration → Konfiguration | Pakete kopieren/importieren/exportieren, vollständige Einrichtung sichern/wiederherstellen |
+| Dashboard / Lightshow Studio | Paket und Szene auswählen, Show oder Ablauf starten, stoppen und Lichtzustände wiederherstellen |
+| Dashboard / Lightshow Studio | Shuffle und Wind, jährliche Events sowie Wochenprogramm |
 
-1. Laufende Show/Vorschau stoppen und **Speichern** drücken. Vollständiges HA-Backup anlegen; eigene Pakete zusätzlich im Tab **Pakete** exportieren.
-2. Den bisherigen Codeordner `custom_components/lightshow_studio/` außerhalb von `custom_components` sichern.
-3. Die lokale Datei `.storage/lightshow_studio` erhalten. Dort liegen Lampen, Pakete, Szenen und Zeitpläne. Nicht löschen, nicht bearbeiten und niemals zu GitHub hochladen.
-4. Repository in HACS als Integration hinzufügen und herunterladen. HACS darf den bisherigen Codeordner ersetzen. Falls HACS wegen eines vorhandenen Ordners abbricht, HA stoppen, ausschließlich den gesicherten Codeordner aus `custom_components` herausnehmen und den Download erneut durchführen. `.storage` bleibt bestehen.
-5. Den bestehenden YAML-Eintrag `lightshow_studio:` genau einmal behalten. Home Assistant neu starten.
-6. Die vorhandene Dashboard-Ressource auf die oben genannte URL ändern, keine zweite Ressource mit derselben Karte anlegen. Browser/App vollständig neu laden.
-7. Lampenzuordnungen, eigene Pakete und Zeitpläne prüfen, zunächst eine Lampe testen.
+Der Dashboard-Karte kann kein Konfigurationsmodus per YAML eingeschaltet werden.
+Die Konfigurationsansicht ist ein eigener, administrativer Home-Assistant-Bereich.
+Konfiguration und Bedienung erfordern aktuell ein HA-Administratorkonto.
 
-Domain `lightshow_studio`, Store-Schlüssel `lightshow_studio` und Speicherformat 2 sind unverändert. Beim Laden vorhandener Daten werden keine neuen Vorgaben darübergeschrieben.
-Neue Installationen beginnen mit leerer Lampenliste. Unter **Lampen → +** die eigenen Entitäten zuordnen.
-Ein Backup bleibt erforderlich, weil Stromausfälle, beschädigte Daten oder manuelle Eingriffe dadurch nicht ausgeschlossen werden.
+## Installation mit HACS – ohne Konfigurationsdateien
 
-### Noch Halloween Control Center v1 installiert?
+1. In HACS **Menü → Benutzerdefinierte Repositories** öffnen und `https://github.com/KrOiiDzeR/lightshow-studio` als Typ **Integration** hinzufügen.
+2. **Lightshow Studio** öffnen und `v2.1.0-beta.6` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
+3. Home Assistant neu starten.
+4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Lightshow Studio** öffnen.
+5. Zigbee2MQTT-Erkennung auswählen: automatisch, eigene Bridge oder nur HA-Lampen. Ohne direkte MQTT-Anbindung stehen unterstützte Funktionen vorhandener HA-Lichtentitäten zur Verfügung.
+6. Auf der Integrationsseite **Konfiguration** öffnen. Alternativ im Optionen-Dialog den Link **Lampen, Szenen und Pakete konfigurieren** oder beim Studio-Gerät die Konfigurationsseite öffnen.
+7. Bereiche anlegen, HA-Lichtentitäten auswählen, Rollen und gegebenenfalls Zigbee2MQTT-Geräte/Bereiche zuordnen. **Erkennen** übernimmt passende Gerätezuordnungen; anschließend kontrollieren und speichern.
+8. Der Seitenleisteneintrag **Lightshow Studio** bietet sofort die Bedienung an. Für ein vorhandenes Dashboard im Kartenwähler **Lightshow Studio** hinzufügen. Die Karte wird automatisch geladen.
 
-Vor dem ersten v2-Start den alten YAML-Eintrag `halloween_control_center:` entfernen und konkurrierende Automationen deaktivieren.
-Die Datei `.storage/halloween_control_center` erhalten. Wenn noch keine v2-Datei existiert, importiert Studio die v1-Szenen und Zuordnungen einmalig; die v1-Datei bleibt unverändert.
-Alte Dashboard-Karte und alte JS-Ressource nach erfolgreicher Prüfung entfernen. `customize.yaml` muss dafür nicht geändert werden.
+Kein Eintrag in `configuration.yaml`, keine manuelle Ressourcenregistrierung, keine Zusatzkarte und kein card-mod erforderlich.
+HACS installiert Backend und Karte gemeinsam. Das Repository wird weiterhin als benutzerdefiniertes Repository hinzugefügt; eine Aufnahme in die HACS-Standardliste ist ein gesonderter Vorgang.
 
-## Theme und Hintergrund
+## Zigbee2MQTT individuell einstellen
 
-Standard: transparente Außenfläche ohne Verlauf und Schatten. Innenflächen übernehmen die Kartenfarbe des aktiven HA-Themes; Text, Rahmen und Fehlerhinweise dessen Farben. Event-Akzente bleiben farbig.
-Für eine klassische Kartenfläche `background: theme` verwenden. Keine Zusatzkarte und kein card-mod erforderlich.
+Die zentrale MQTT-Integration von Home Assistant verwaltet Broker, Port und Zugangsdaten.
+Diese können über deren normale Einrichtungsoberfläche konfiguriert werden; Studio verlinkt sie direkt.
+Studio speichert keine zweite Broker-Verbindung und keine Broker-Zugangsdaten.
 
-## Zigbee2MQTT-Erkennung und natives Tempo
+- **Automatisch:** Gerätelisten über `+/bridge/devices`; die Schreibweise des erkannten Basisthemas bleibt erhalten.
+- **Eigene Bridge:** Exaktes, auch verschachteltes Basisthema eingeben, beispielsweise `home/garden/zigbee`. Kein `/bridge/devices` anhängen; keine MQTT-Platzhalter verwenden.
+- **Nur Home-Assistant-Lampen:** Keine direkte MQTT-Teilnahme. Vorhandene `light.*`-Entitäten lassen sich mit ihren unterstützten Funktionen verwenden.
 
-Ab beta.3 erkennt Studio die Geräteliste über `+/bridge/devices` automatisch. Der erkannte Topic-Prefix bleibt exakt erhalten; `Zigbee2mqtt` und `zigbee2mqtt` sind unterschiedliche MQTT-Themen.
-Unter **Lampen** wird die Anzahl erkannter Geräte angezeigt. **Erkennen** ordnet vorhandene HA-Lampen anhand der Gerätekennung zu. Zuordnungen prüfen und speichern. Je Dymera verwenden oben/unten denselben Gerätenamen und unterschiedliche Lichtbereiche.
+Nach dem Übernehmen der Verbindung lädt Home Assistant die Integration neu. Laufende Shows oder Vorschauen vorher stoppen.
+Bei gleichnamigen Geräten mehrerer Bridges ausdrücklich eine Bridge wählen; mehrdeutige MQTT-Befehle werden abgelehnt.
+Für Dymera oben/unten zwei HA-Entitäten mit demselben Zigbee2MQTT-Gerätenamen und unterschiedlichen Bereichen zuordnen.
+Natives Tempo setzt ein unterstütztes Gerät und passende Firmware voraus.
 
-Für einen verschachtelten Prefix oder mehrere Bridges mit gleich benannten Geräten kann eine Bridge ausdrücklich gewählt werden:
+## Eigene Szenenauswahl für Shuffle
 
-```yaml
-lightshow_studio:
-  mqtt_base_topic: home/garden/zigbee
+Unter **Integration einrichten → Bereich wählen → Shuffle** werden alle Szenen dieses Bereichs nach Paketen aufgelistet.
+Über die Schalter einzelne Szenen aufnehmen oder ausschließen, anschließend **Speichern** drücken. Szenen aus unterschiedlichen Paketen können kombiniert werden.
+**Alle Szenen aufnehmen** und **Auswahl leeren** helfen bei der Zusammenstellung. Jeder Bereich hat eine eigene Auswahl.
+Neue oder importierte Szenen werden einer bereits festgelegten Auswahl nicht automatisch hinzugefügt.
+
+Im Dashboard wird Shuffle eingeschaltet und das Wechselintervall eingestellt. Dort erscheint auch die Anzahl der ausgewählten Szenen.
+Eine leere Auswahl führt zu keinem zufälligen Wechsel. Bei nur einer ausgewählten Szene bleibt diese nach Erreichen aktiv.
+Die unmittelbar zuvor aktive Szene wird beim nächsten Zufallswechsel ausgelassen. Feste Show-Abläufe behalten ihre Reihenfolge.
+Die Auswahl wird wie andere Konfigurationsänderungen erst nach Stoppen des Bereichs gespeichert.
+Solange noch keine eigene Auswahl gespeichert wurde, verwendet Shuffle wie bisher die Szenen des gestarteten Pakets.
+
+## Wochenprogramm und Jahres-Events
+
+Unter **Zeitplan** Wochentage, Beginn, Ende, Paket und Szene oder kompletten Ablauf wählen.
+Neue Wochenzeiten sind deaktiviert. Erst nach Aktivierung und Speichern laufen sie automatisch.
+Überlappende aktive Wochenzeiten werden abgelehnt; angrenzende Zeitfenster sind erlaubt.
+Jährliche Events haben während ihres Zeitfensters Vorrang, danach kann ein Wochenprogramm fortgesetzt werden.
+Alle Zeiten verwenden Home Assistants lokale Zeitzone. Fenster müssen am selben Tag enden.
+Der Prüftakt beträgt fünf Sekunden. Nach einem manuellen Stopp erfolgt an diesem Tag kein automatischer Neustart.
+Manuell gestartete Shows werden nicht durch einen Zeitplan beendet.
+
+## Bestehende v2-Einrichtung erhalten
+
+Vor dem Update alle Shows/Vorschauen stoppen und ein vollständiges HA-Backup anlegen. Eigene Pakete zusätzlich exportieren.
+Dann die neue Version in HACS installieren, Home Assistant neu starten und den Browser vollständig neu laden.
+Bei einer bestehenden YAML-Installation nicht zusätzlich einen zweiten Eintrag anlegen: der Import startet automatisch. Bei einer frischen Installation den oben beschriebenen Einrichtungsdialog verwenden.
+Die Domain und der Speicherpfad `.storage/lightshow_studio` bleiben erhalten.
+Bestehende v2-Lampen, Pakete, Szenen, Abläufe und Termine werden vollständig in den ersten Bereich **Mein Bereich** übernommen; dieser kann umbenannt werden.
+Beim Laden wird die bisherige Datei nicht überschrieben. Erst beim nächsten Speichern entsteht der Bereichscontainer mit Schema 3, dessen einzelne Bereichseinstellungen weiterhin Schema 2 verwenden.
+Die HA-Store-Version bleibt 2. Vor einem Downgrade auf 2.0.0-beta.3 die vor dem Update erstellte Sicherung wiederherstellen, da diese Version noch keinen Bereichscontainer versteht.
+
+Der bisherige YAML-Eintrag wird beim Start automatisch in genau einen UI-Eintrag importiert.
+Ein vorhandener UI-Eintrag verhindert doppelte Einrichtung. Das alte YAML darf zunächst bleiben und muss für das Update nicht manuell geändert werden.
+Die bislang vorhandene Dashboard-Karte verwendet automatisch die Bedienungsansicht.
+Ihre bisherige Ressourcen-URL liefert nach Austausch des Codes ebenfalls den neuen Code; eine zweite Registrierung ist nicht nötig.
+
+Die v1-Datei `.storage/halloween_control_center` bleibt unverändert. Ist noch keine v2-Datei vorhanden, werden gültige v1-Szenen einmalig übernommen.
+Konkurrierende alte Automationen vor einem tatsächlichen Test deaktivieren.
+Niemals `.storage`, Konfigurationsexporte, HA-Konfigurationsdateien oder Zugangsdaten zu GitHub hochladen.
+
+## Oberfläche
+
+Der transparente Hintergrund und die Home-Assistant-Themefarben bleiben erhalten.
+Zusammengehörige Funktionen sind als aufklappbare Abschnitte mit Symbol, Titel und eigener Umrandung gegliedert. Ein Klick auf die Abschnittsüberschrift klappt den Inhalt ein oder aus; dieser Zustand bleibt innerhalb der geöffneten Karte bei Aktualisierungen erhalten.
+Die Ansichtsreiter zeigen Titel und Zweck sowie eine deutliche aktive Markierung. Sie lassen sich auch mit Pfeiltasten, Pos1 und Ende wechseln.
+Shuffle und Wind haben gestaltete Schalterkarten. Für das Szenenwechselintervall stehen ein Regler und Vorgaben für 1, 3, 5 und 10 Minuten zur Verfügung. Änderungen werden wie bisher mit **Speichern** übernommen.
+Die Option `background: theme` bietet alternativ eine normale Kartenfläche.
+Die vorhandenen Effekte, Pakete, Gruppen, Einzel-Ausnahmen und Abläufe bleiben verfügbar.
+Der Konfigurationsbereich enthält weiterhin die zehnsekündige Einzelvorschau.
+
+## Lokale Entwicklung und Prüfungen
+
+Siehe [Entwicklungsstand](docs/DEVELOPMENT.md), [Prüfstatus](docs/VALIDATION.md) und [Release-Verfahren](docs/RELEASING.md).
+Die Datei [dev-preview.html](docs/dev-preview.html) ist eine vollständig lokale, interaktive Vorschau mit Beispieldaten.
+Sie steuert keine echten Lampen und benötigt weder Home Assistant noch ein Benutzerkonto.
+Änderungen der Vorschau gelten für die geöffnete Sitzung; beim vollständigen Neuladen startet sie wieder mit Beispieldaten. Die tatsächliche Integration speichert Bereiche dauerhaft in Home Assistant.
+
+```text
+python scripts/check_repository.py
+python -m unittest discover -s tests -v
+node --check custom_components/lightshow_studio/static/lightshow-studio.js
+node tests/ui_smoke.cjs
+python scripts/build_release.py
 ```
 
-Nach einer YAML-Änderung Home Assistant neu starten. Kein Broker-Passwort nötig; Studio verwendet die bestehende MQTT-Integration. Ohne passende Geräteliste bleibt die HA-Steuerung verfügbar. Die Tempo-Einstellung wirkt bei direkt erkannten Dymera-Geräten auf den nativen Effekt; sie beschleunigt keine beliebigen HA-Effekte anderer Lampen.
+Native Home-Assistant-Einrichtung, Bereichssteuerung und Migration dieser Beta sind noch nicht vollständig auf realer Hardware geprüft.
+Die bereits erfolgten realen beta.3-Tests ersetzen diese neue Prüfung nicht.
 
-## Bedienung
-
-- **Lampen:** HA-Entitäten hinzufügen und Rollen Oben/Unten/Haustür/Andere wählen. Für Dymera das Zigbee2MQTT-Gerät und den Endpoint top/bottom zuweisen. Beide Bereiche verwenden dasselbe Gerät.
-- **Shows:** Szene oder kompletten Ablauf starten, stoppen und vorherige Lichtzustände bestmöglich wiederherstellen.
-- **Editor:** Effekte pro Rolle, Ausnahmen und Abläufe bearbeiten. Änderungen speichern; zunächst eine Lampe für 10 Sekunden testen.
-- **Zeitplan:** jährliches Datum und Zeitfenster am selben Tag. Überlappende aktive Termine werden abgelehnt. Schrittwechsel können durch den 5-Sekunden-Prüfzyklus verzögert sein.
-- **Pakete:** JSON importieren/exportieren oder vorhandenes Paket kopieren. Beispiel: `show_packs/Sommerparty.json`.
-
-Aktionen für Automationen:
-
-```yaml
-action: lightshow_studio.start
-data:
-  pack_id: halloween
-  scene_id: castle
-```
-
-Weitere Aktionen: `lightshow_studio.start_program` mit `pack_id` und `program_id`; `lightshow_studio.stop` ohne Daten.
-
-## Updates und Rückkehr zur vorherigen Version
-
-Neue veröffentlichte Versionen erscheinen über HACS; je nach HACS-Version auch als Update in Home Assistant.
-Update installieren, HA neu starten und den Browser neu laden. Falls die Karte veraltet bleibt, den `?v=`-Wert der bestehenden Ressource auf die neue Version setzen.
-Beta-Updates setzen die Auswahl von Vorabversionen voraus. Eine Aufnahme in die HACS-Standardliste ist ein gesonderter Vorgang; dieses Repository wird zunächst benutzerdefiniert hinzugefügt.
-
-Bei Problemen die vorherige Version im HACS-Download-Dialog auswählen oder den gesicherten Code zurückspielen, danach neu starten. Bei künftig geändertem Speicherformat auch das passende Backup wiederherstellen.
-
-## Einschränkungen und Fehlersuche
-
-- Vorherige Zustände werden nur bestmöglich wiederhergestellt. Neustarts während einer Show verlieren flüchtige Snapshots; dann Lampen manuell prüfen.
-- Bei „Custom element doesn't exist“ Ressourcen-URL, Modultyp, HA-Protokoll und Browsercache prüfen.
-- Bei fehlenden Effekten Entität, MQTT, Zigbee2MQTT-Gerätenamen, Dymera-Modell `046677585235` und Endpoint prüfen.
-- Administrationsrechte in HA sind für die Konfiguration erforderlich. Keine Zugangsdaten oder Cloud-Dienste nötig.
-- Keine HA-Konfigurationen, Backups, Geräteadressen oder Tokens in Issues anhängen; Beispiele vorher anonymisieren.
-
-## Entwicklung und Releases
-
-Siehe [Release-Anleitung](docs/RELEASING.md) und [Prüfstatus](docs/VALIDATION.md).
-Lizenz: MIT. Nicht Teil des offiziellen Home-Assistant-Projekts.
-
-Konventionen: [HACS Integration](https://www.hacs.xyz/docs/publish/integration/), [HACS Versionierung](https://www.hacs.xyz/docs/publish/start/), [HACS Action](https://www.hacs.xyz/docs/publish/action/).
+Lizenz: MIT. Keine Cloud-Anbindung und keine Musiksynchronisierung.
