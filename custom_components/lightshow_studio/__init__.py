@@ -27,9 +27,12 @@ from homeassistant.util import dt as dt_util
 from .settings import (
     COLORS, EFFECTS, check_settings, defaults, migrate_v1, validate_pack,
 )
+from .discovery import base_topic, command_topic, device_list
 
 DOMAIN = "lightshow_studio"
-CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
+CONFIG_SCHEMA = vol.Schema({
+    DOMAIN: vol.Any(None, vol.Schema({vol.Optional("mqtt_base_topic"): base_topic})),
+}, extra=vol.ALLOW_EXTRA)
 _LOGGER = logging.getLogger(__name__)
 IEEE_RE = re.compile(r"0x[0-9a-fA-F]{16}")
 DYMERAS = {"046677585235"}
@@ -51,6 +54,7 @@ class Studio:
         self.store = Store(hass, 2, DOMAIN)
         self.settings = defaults()
         self.devices: list[dict] = []
+        self._devices_by_base: dict[str, list[dict]] = {}
         self.running = False
         self.active_pack = ""
         self.active_scene = ""
@@ -94,16 +98,9 @@ class Studio:
     @callback
     def got_devices(self, message: Any):
         try:
-            loaded = json.loads(message.payload)
-            if not isinstance(loaded, list):
-                return
-            self.devices = [{
-                "friendly_name": d["friendly_name"],
-                "ieee_address": d.get("ieee_address", ""),
-                "model": (d.get("definition") or {}).get("model", ""),
-                "description": (d.get("definition") or {}).get("description", ""),
-            } for d in loaded if isinstance(d, dict) and d.get("type") != "Coordinator"
-               and d.get("supported", True) and isinstance(d.get("friendly_name"), str)]
+            prefix, devices = device_list(message.payload, message.topic)
+            self._devices_by_base[prefix] = devices
+            self.devices = [device for inventory in self._devices_by_base.values() for device in inventory]
         except (TypeError, ValueError, KeyError) as err:
             _LOGGER.warning("Could not read Zigbee2MQTT device list: %s", err)
 
@@ -144,9 +141,8 @@ class Studio:
         return (name, ep) if ep in {"top", "bottom"} else None
 
     async def _publish(self, name: str, payload: dict):
-        if not any(d["friendly_name"] == name for d in self.devices):
-            raise ValueError("Zigbee2MQTT-Gerät nicht in der Geräteliste gefunden")
-        await mqtt.async_publish(self.hass, f"zigbee2mqtt/{name}/set", json.dumps(payload), qos=0, retain=False)
+        topic = command_topic(self.devices, name)
+        await mqtt.async_publish(self.hass, topic, json.dumps(payload), qos=0, retain=False)
 
     def _snapshot(self, eid: str) -> dict | None:
         st = self.hass.states.get(eid)
@@ -417,7 +413,11 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
     js_path = Path(__file__).parent / "static" / "lightshow-studio.js"
     await hass.http.async_register_static_paths([StaticPathConfig(f"/{DOMAIN}/lightshow-studio.js", str(js_path), False)])
     try:
-        unsubscribe = await mqtt.async_subscribe(hass, "zigbee2mqtt/bridge/devices", studio.got_devices)
+        # The MQTT prefix is case-sensitive and need not be "zigbee2mqtt".
+        # Auto mode discovers single-level prefixes; YAML also permits nested ones.
+        prefix = (config.get(DOMAIN) or {}).get("mqtt_base_topic")
+        topic = f"{prefix}/bridge/devices" if prefix else "+/bridge/devices"
+        unsubscribe = await mqtt.async_subscribe(hass, topic, studio.got_devices)
     except Exception as err:
         _LOGGER.warning("Zigbee2MQTT discovery not yet available: %s", err)
         unsubscribe = lambda: None
