@@ -1,0 +1,17 @@
+{
+  "domain": "lightshow_studio",
+  "name": "Lightshow Studio",
+  "codeowners": [
+    "@KrOiiDzeR"
+  ],
+  "dependencies": [
+    "http",
+    "mqtt",
+    "websocket_api"
+  ],
+  "documentation": "https://github.com/KrOiiDzeR/lightshow-studio",
+  "integration_type": "hub",
+  "iot_class": "local_push",
+  "issue_tracker": "https://github.com/KrOiiDzeR/lightshow-studio/issues",
+  "version": "2.0.0-beta.2"
+}

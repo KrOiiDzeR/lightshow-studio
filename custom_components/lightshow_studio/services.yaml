@@ -1,0 +1,33 @@
+start:
+  name: Lightshow starten
+  description: Startet eine Szene aus einem installierten Show-Paket.
+  fields:
+    pack_id:
+      name: Show-Paket-ID
+      required: true
+      example: christmas
+      selector:
+        text:
+    scene_id:
+      name: Szenen-ID
+      required: true
+      example: advent
+      selector:
+        text:
+start_program:
+  name: Show-Ablauf starten
+  description: Spielt die Szenen eines Show-Ablaufs im Kreis bis zum manuellen Stopp ab.
+  fields:
+    pack_id:
+      name: Show-Paket-ID
+      required: true
+      selector:
+        text:
+    program_id:
+      name: Ablauf-ID
+      required: true
+      selector:
+        text:
+stop:
+  name: Lightshow stoppen
+  description: Stoppt die Show und versucht die vorigen Lichtzustände wiederherzustellen.
