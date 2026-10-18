@@ -18,7 +18,7 @@ with ZipFile(archive, 'w', ZIP_DEFLATED) as target:
         target.write(ROOT / name, name)
     for folder in ['docs', 'show_packs']:
         for path in sorted((ROOT / folder).rglob('*')):
-            if path.is_file() and path.suffix in {'.md', '.png', '.json'}:
+            if path.is_file() and path.suffix in {'.md', '.png', '.json', '.html'}:
                 target.write(path, path.relative_to(ROOT).as_posix())
 digest = hashlib.sha256(archive.read_bytes()).hexdigest()
 (output / 'SHA256SUMS').write_text(f'{digest}  {archive.name}\n', encoding='utf-8')

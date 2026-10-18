@@ -15,6 +15,11 @@ def check():
     assert re.fullmatch(r'\d+\.\d+\.\d+(?:-(?:beta|rc)\.[1-9]\d*)?', manifest['version'])
     assert manifest['documentation'] == 'https://github.com/KrOiiDzeR/lightshow-studio'
     assert manifest['issue_tracker'] == manifest['documentation'] + '/issues'
+    assert manifest['config_flow'] is True
+    assert (PACKAGE / 'config_flow.py').is_file()
+    assert f'VERSION = "{manifest["version"]}"' in (PACKAGE / 'const.py').read_text(encoding='utf-8')
+    for language in ('de', 'en'):
+        assert (PACKAGE / 'translations' / f'{language}.json').is_file()
     assert [p.name for p in (ROOT / 'custom_components').iterdir() if p.is_dir()] == ['lightshow_studio']
     assert json.loads((ROOT / 'hacs.json').read_text())['name'] == 'Lightshow Studio'
     assert (PACKAGE / 'brand/icon.png').is_file()
