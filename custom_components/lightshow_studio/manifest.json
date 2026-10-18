@@ -1,9 +1,13 @@
 {
   "domain": "lightshow_studio",
   "name": "Lightshow Studio",
+  "after_dependencies": [
+    "mqtt"
+  ],
   "codeowners": [
     "@KrOiiDzeR"
   ],
+  "config_flow": true,
   "dependencies": [
     "frontend",
     "http",
@@ -14,9 +18,5 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/KrOiiDzeR/lightshow-studio/issues",
-  "version": "2.1.0-beta.6",
-  "config_flow": true,
-  "after_dependencies": [
-    "mqtt"
-  ]
+  "version": "2.1.0-beta.6"
 }
