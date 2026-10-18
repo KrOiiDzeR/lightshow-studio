@@ -1,0 +1,100 @@
+{
+  "id": "summer_party",
+  "name": "Sommerparty",
+  "icon": "🍹",
+  "description": "Ein Beispielpaket zum Importieren – ganz ohne Programmierarbeit.",
+  "schedule": {
+    "enabled": false,
+    "month": 7,
+    "day": 15,
+    "start": "19:00",
+    "end": "23:00",
+    "scene_id": "cocktail",
+    "program_id": ""
+  },
+  "scenes": [
+    {
+      "id": "cocktail",
+      "name": "Cocktailabend",
+      "icon": "🍹",
+      "description": "Farbenfroher Gartenabend",
+      "tracks": {
+        "upper": {
+          "mode": "colorloop",
+          "brightness": 75,
+          "speed": 45,
+          "color": "#FF8730"
+        },
+        "lower": {
+          "mode": "purple",
+          "brightness": 45,
+          "speed": 40,
+          "color": "#FF8730"
+        },
+        "entrance": {
+          "mode": "warm",
+          "brightness": 55,
+          "speed": 35,
+          "color": "#FF8730"
+        },
+        "other": {
+          "mode": "gold",
+          "brightness": 50,
+          "speed": 45,
+          "color": "#FF8730"
+        }
+      },
+      "overrides": []
+    },
+    {
+      "id": "tropical",
+      "name": "Tropennacht",
+      "icon": "🌴",
+      "description": "Blau und Grün für laue Nächte",
+      "tracks": {
+        "upper": {
+          "mode": "blue",
+          "brightness": 65,
+          "speed": 45,
+          "color": "#FF8730"
+        },
+        "lower": {
+          "mode": "green",
+          "brightness": 55,
+          "speed": 45,
+          "color": "#FF8730"
+        },
+        "entrance": {
+          "mode": "breathe",
+          "brightness": 45,
+          "speed": 25,
+          "color": "#FF8730"
+        },
+        "other": {
+          "mode": "ice",
+          "brightness": 40,
+          "speed": 45,
+          "color": "#FF8730"
+        }
+      },
+      "overrides": []
+    }
+  ],
+  "programs": [
+    {
+      "id": "tour",
+      "name": "Sommerparty-Show",
+      "icon": "🎬",
+      "steps": [
+        {
+          "scene_id": "cocktail",
+          "duration": 75
+        },
+        {
+          "scene_id": "tropical",
+          "duration": 90
+        }
+      ]
+    }
+  ]
+}
