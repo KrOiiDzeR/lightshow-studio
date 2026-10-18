@@ -2,6 +2,11 @@ start:
   name: Lightshow starten
   description: Startet eine Szene aus einem installierten Show-Paket.
   fields:
+    area_id:
+      name: Bereichs-ID
+      description: Optional; ohne Angabe wird der erste Bereich gestartet.
+      selector:
+        text:
     pack_id:
       name: Show-Paket-ID
       required: true
@@ -18,6 +23,11 @@ start_program:
   name: Show-Ablauf starten
   description: Spielt die Szenen eines Show-Ablaufs im Kreis bis zum manuellen Stopp ab.
   fields:
+    area_id:
+      name: Bereichs-ID
+      description: Optional; ohne Angabe wird der erste Bereich gestartet.
+      selector:
+        text:
     pack_id:
       name: Show-Paket-ID
       required: true
@@ -30,4 +40,10 @@ start_program:
         text:
 stop:
   name: Lightshow stoppen
-  description: Stoppt die Show und versucht die vorigen Lichtzustände wiederherzustellen.
+  description: Stoppt den angegebenen Bereich und stellt Lichtzustände bestmöglich wieder her. Ohne Bereichs-ID werden alle Bereiche gestoppt.
+  fields:
+    area_id:
+      name: Bereichs-ID
+      description: Leer lassen, um alle Bereiche zu stoppen.
+      selector:
+        text:

@@ -154,6 +154,10 @@ def check_settings(data: dict) -> dict:
     interval = opts.get("shuffle_interval")
     if type(interval) is not int or not 60 <= interval <= 3600:
         raise ValueError("Szenenwechsel: 60 bis 3600 Sekunden")
+    from .planning import validate_weekly
+    validate_weekly(data.get("weekly", []), packs)
+    from .shuffle import validate_shuffle
+    validate_shuffle(data)
     return copy.deepcopy(data)
 
 

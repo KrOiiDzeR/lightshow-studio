@@ -5,13 +5,18 @@
     "@KrOiiDzeR"
   ],
   "dependencies": [
+    "frontend",
     "http",
-    "mqtt",
+    "panel_custom",
     "websocket_api"
   ],
   "documentation": "https://github.com/KrOiiDzeR/lightshow-studio",
   "integration_type": "hub",
   "iot_class": "local_push",
   "issue_tracker": "https://github.com/KrOiiDzeR/lightshow-studio/issues",
-  "version": "2.0.0-beta.3"
+  "version": "2.1.0-beta.6",
+  "config_flow": true,
+  "after_dependencies": [
+    "mqtt"
+  ]
 }
