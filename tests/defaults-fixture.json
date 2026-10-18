@@ -1,0 +1,720 @@
+{
+  "schema": 2,
+  "fixtures": [
+    {
+      "entity_id": "light.demo_0",
+      "role": "upper",
+      "friendly_name": "",
+      "endpoint": "top",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_1",
+      "role": "upper",
+      "friendly_name": "",
+      "endpoint": "top",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_2",
+      "role": "upper",
+      "friendly_name": "",
+      "endpoint": "top",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_3",
+      "role": "lower",
+      "friendly_name": "",
+      "endpoint": "bottom",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_4",
+      "role": "lower",
+      "friendly_name": "",
+      "endpoint": "bottom",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_5",
+      "role": "lower",
+      "friendly_name": "",
+      "endpoint": "bottom",
+      "enabled": true
+    },
+    {
+      "entity_id": "light.demo_6",
+      "role": "entrance",
+      "friendly_name": "",
+      "endpoint": "auto",
+      "enabled": true
+    }
+  ],
+  "packs": [
+    {
+      "id": "halloween",
+      "name": "Halloween",
+      "icon": "🎃",
+      "description": "Kerzen, Grusel, Gewitter und geheimnisvolle Nächte",
+      "programs": [
+        {
+          "id": "tour",
+          "name": "Komplette Lichtshow",
+          "icon": "🎬",
+          "steps": [
+            {
+              "scene_id": "castle",
+              "duration": 60
+            },
+            {
+              "scene_id": "haunted",
+              "duration": 60
+            },
+            {
+              "scene_id": "storm",
+              "duration": 60
+            },
+            {
+              "scene_id": "fire",
+              "duration": 60
+            },
+            {
+              "scene_id": "bloodmoon",
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "schedule": {
+        "enabled": false,
+        "month": 10,
+        "day": 31,
+        "start": "18:00",
+        "end": "23:00",
+        "scene_id": "castle",
+        "program_id": ""
+      },
+      "scenes": [
+        {
+          "id": "castle",
+          "name": "Gruselschloss",
+          "icon": "🏰",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "candle",
+              "brightness": 76,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "red",
+              "brightness": 45,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "candle",
+              "brightness": 74,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "haunted",
+          "name": "Geisterhaus",
+          "icon": "👻",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "sparkle",
+              "brightness": 62,
+              "speed": 42,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "purple",
+              "brightness": 50,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "sparkle",
+              "brightness": 62,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "storm",
+          "name": "Gewitternacht",
+          "icon": "⚡",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "blink",
+              "brightness": 85,
+              "speed": 70,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "blink",
+              "brightness": 80,
+              "speed": 66,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "fire",
+          "name": "Flammenmeer",
+          "icon": "🔥",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "fireplace",
+              "brightness": 74,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "fireplace",
+              "brightness": 48,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "candle",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "bloodmoon",
+          "name": "Blutmond",
+          "icon": "🌕",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "fireplace",
+              "brightness": 73,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "red",
+              "brightness": 58,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "candle",
+              "brightness": 68,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        }
+      ]
+    },
+    {
+      "id": "christmas",
+      "name": "Weihnachten",
+      "icon": "🎄",
+      "description": "Warmweiße Winterabende, festliche Farben und Kerzenschein",
+      "programs": [
+        {
+          "id": "tour",
+          "name": "Komplette Lichtshow",
+          "icon": "🎬",
+          "steps": [
+            {
+              "scene_id": "advent",
+              "duration": 60
+            },
+            {
+              "scene_id": "winter",
+              "duration": 60
+            },
+            {
+              "scene_id": "christmas_classic",
+              "duration": 60
+            },
+            {
+              "scene_id": "fireside",
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "schedule": {
+        "enabled": false,
+        "month": 12,
+        "day": 24,
+        "start": "18:00",
+        "end": "23:00",
+        "scene_id": "advent",
+        "program_id": ""
+      },
+      "scenes": [
+        {
+          "id": "advent",
+          "name": "Adventslichter",
+          "icon": "🕯️",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "candle",
+              "brightness": 58,
+              "speed": 36,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "gold",
+              "brightness": 40,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "candle",
+              "brightness": 68,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "winter",
+          "name": "Wintermärchen",
+          "icon": "❄️",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "sparkle",
+              "brightness": 66,
+              "speed": 33,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "ice",
+              "brightness": 52,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "warm",
+              "brightness": 60,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "christmas_classic",
+          "name": "Klassische Weihnachten",
+          "icon": "🎁",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "warm",
+              "brightness": 74,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "red",
+              "brightness": 48,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "green",
+              "brightness": 60,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "fireside",
+          "name": "Kaminabend",
+          "icon": "🔥",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "fireplace",
+              "brightness": 64,
+              "speed": 38,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "warm",
+              "brightness": 44,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "candle",
+              "brightness": 62,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        }
+      ]
+    },
+    {
+      "id": "party",
+      "name": "Party & Geburtstag",
+      "icon": "🎉",
+      "description": "Bunte Effekte für Feste und Feiern",
+      "programs": [
+        {
+          "id": "tour",
+          "name": "Komplette Lichtshow",
+          "icon": "🎬",
+          "steps": [
+            {
+              "scene_id": "disco",
+              "duration": 60
+            },
+            {
+              "scene_id": "confetti",
+              "duration": 60
+            },
+            {
+              "scene_id": "birthday",
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "schedule": {
+        "enabled": false,
+        "month": 6,
+        "day": 1,
+        "start": "18:00",
+        "end": "23:00",
+        "scene_id": "disco",
+        "program_id": ""
+      },
+      "scenes": [
+        {
+          "id": "disco",
+          "name": "Disco",
+          "icon": "🪩",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "colorloop",
+              "brightness": 83,
+              "speed": 82,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "colorloop",
+              "brightness": 75,
+              "speed": 62,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "sparkle",
+              "brightness": 71,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "confetti",
+          "name": "Konfetti",
+          "icon": "🎊",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "sparkle",
+              "brightness": 80,
+              "speed": 66,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "purple",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "colorloop",
+              "brightness": 70,
+              "speed": 50,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "birthday",
+          "name": "Geburtstag",
+          "icon": "🎂",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "sunbeam",
+              "brightness": 77,
+              "speed": 48,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "gold",
+              "brightness": 68,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "sparkle",
+              "brightness": 65,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        }
+      ]
+    },
+    {
+      "id": "ambience",
+      "name": "Ambiente & Jahreszeiten",
+      "icon": "🌿",
+      "description": "Gemütliche Lichtstimmungen für jeden Tag",
+      "programs": [
+        {
+          "id": "tour",
+          "name": "Komplette Lichtshow",
+          "icon": "🎬",
+          "steps": [
+            {
+              "scene_id": "evening",
+              "duration": 60
+            },
+            {
+              "scene_id": "summer",
+              "duration": 60
+            },
+            {
+              "scene_id": "relax",
+              "duration": 60
+            }
+          ]
+        }
+      ],
+      "schedule": {
+        "enabled": false,
+        "month": 1,
+        "day": 1,
+        "start": "18:00",
+        "end": "23:00",
+        "scene_id": "evening",
+        "program_id": ""
+      },
+      "scenes": [
+        {
+          "id": "evening",
+          "name": "Gemütlicher Abend",
+          "icon": "☕",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "warm",
+              "brightness": 55,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "gold",
+              "brightness": 35,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "warm",
+              "brightness": 48,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "summer",
+          "name": "Sommernacht",
+          "icon": "🌙",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "breathe",
+              "brightness": 48,
+              "speed": 22,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "blue",
+              "brightness": 37,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "warm",
+              "brightness": 42,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        },
+        {
+          "id": "relax",
+          "name": "Entspannung",
+          "icon": "🧘",
+          "description": "",
+          "tracks": {
+            "upper": {
+              "mode": "warm",
+              "brightness": 35,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "lower": {
+              "mode": "ice",
+              "brightness": 25,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "entrance": {
+              "mode": "warm",
+              "brightness": 30,
+              "speed": 55,
+              "color": "#FF8730"
+            },
+            "other": {
+              "mode": "off",
+              "brightness": 70,
+              "speed": 55,
+              "color": "#FF8730"
+            }
+          },
+          "overrides": []
+        }
+      ]
+    }
+  ],
+  "options": {
+    "shuffle": false,
+    "shuffle_interval": 180,
+    "wind": false
+  }
+}
