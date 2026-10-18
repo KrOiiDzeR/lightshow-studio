@@ -15,7 +15,7 @@ Die Workflows benötigen keine persönlichen Tokens oder zusätzlichen Secrets. 
 3. Unter **Actions → Validate** alle Jobs prüfen. Ein grüner Lauf ersetzt keinen HA-/Hardwaretest.
 4. **Actions → Publish release → Run workflow** auf Branch `main` öffnen.
 5. Versionsnummer ohne `v` eingeben, z. B. `2.0.0-beta.3`, und starten.
-6. Der Workflow setzt Manifest und Ressourcenbeispiel, prüft Tests/HACS/hassfest, erstellt Commit und Tag `v2.0.0-beta.3`, ZIP plus SHA256 und veröffentlicht das GitHub-Release als Vorabversion.
+6. Der Workflow setzt Manifest, Frontend-Versionskonstante und Ressourcenbeispiel, prüft Tests/HACS/hassfest, erstellt Commit und Tag `v2.0.0-beta.3`, ZIP plus SHA256 und veröffentlicht das GitHub-Release als Vorabversion.
 7. Das Release und dessen ZIP unter **Releases** kontrollieren. In einer Testinstallation per HACS aktualisieren; Lampen, Pakete und Neustart prüfen.
 
 Die erste vorbereitete Version ist `2.0.0-beta.2`; denselben Ablauf dafür verwenden.
