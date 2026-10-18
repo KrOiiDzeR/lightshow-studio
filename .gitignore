@@ -1,0 +1,12 @@
+__pycache__/
+*.py[cod]
+.venv/
+.env*
+.storage/
+configuration.yaml
+secrets.yaml
+customize.yaml
+home-assistant*.log*
+*.db*
+dist/
+node_modules/
