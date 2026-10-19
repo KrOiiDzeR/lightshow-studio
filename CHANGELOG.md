@@ -1,5 +1,14 @@
 # Änderungen
 
+## 2.3.1-beta.1
+
+- Normale neue Lampen und ausdrücklich als Lampen ausgewählte Schaltaktoren verwenden die aktive Hauptspur statt der früher ausgeschalteten Gruppe „Andere“. Gespeicherte Szenen werden nicht automatisch umgeschrieben.
+- Dashboard zeigt die tatsächlich wirksame Szenenzuordnung (aktive/ausgeschaltete Lampen); eine reine Aus-Szene wird deutlich gekennzeichnet. Lampenzeilen zeigen den zugeordneten Effekt der gewählten Szene.
+- Separate Quelle „Schaltaktor als Lampe“: `switch.*` erhält ausschließlich `switch.turn_on` / `switch.turn_off`, einschließlich Rücksetzen. Explizites Blinken schaltet Relais höchstens alle acht Sekunden um. Farben und Helligkeit werden nicht an Relais gesendet.
+- Kleine globale Option für den Seitenleisteneintrag unter Verbindung & Darstellung und im normalen HA-Optionsdialog. Die Dashboard-Karte und direkte Bedienroute bleiben auch bei ausgeblendeter Seitenleiste verfügbar.
+- Lokale RGBW-Hardwareprüfung: Kerzenflackern, Farbwechsel, 55 % / 35 % Helligkeit und exakte Wiederherstellung vom Shelly über HA bestätigt. Die Ursache des gemeldeten Ausschaltens war die ausgeschaltete Gruppenspur; die HA-Farbkonvertierung arbeitete korrekt.
+- Weitere Prüfdetails einschließlich Grenzen der alten HACS-Logoanzeige: `docs/TEST-2.3.1.md`.
+
 ## 2.3.0-beta.1
 
 Öffentliche Vorabversion mit Studio A und Softwareeffekten für normale Home-Assistant-Lampen.

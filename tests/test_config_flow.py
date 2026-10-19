@@ -46,7 +46,7 @@ class ConfigFlowTest(TestCase):
         self.assertEqual(result['type'],'form')
         self.assertEqual(result['step_id'],'user')
         result=await self.flow.async_step_user({'mqtt_mode':'manual','mqtt_base_topic':'Home/Zigbee/'})
-        self.assertEqual(result['data'],{'mqtt_mode':'manual','mqtt_base_topic':'Home/Zigbee'})
+        self.assertEqual(result['data'],{'mqtt_mode':'manual','mqtt_base_topic':'Home/Zigbee','show_sidebar':True})
         self.flow.existing=True
         with self.assertRaises(Abort):await self.flow.async_step_user()
 
@@ -75,3 +75,10 @@ class ConfigFlowTest(TestCase):
         result=await flow.async_step_init({'mqtt_mode':'disabled'})
         self.assertEqual(result['type'],'create_entry')
         self.assertEqual(result['data']['mqtt_mode'],'disabled')
+
+    async def test_sidebar_option_is_explicit_and_defaults_visible(self):
+        validate = self.ns['validate_connection']
+        self.assertTrue(validate(self.hass, {'mqtt_mode':'disabled'})['show_sidebar'])
+        self.assertFalse(validate(self.hass, {'mqtt_mode':'disabled','show_sidebar':False})['show_sidebar'])
+        with self.assertRaises(ValueError):
+            validate(self.hass, {'mqtt_mode':'disabled','show_sidebar':'false'})

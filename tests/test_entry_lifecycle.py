@@ -89,6 +89,13 @@ class EntryLifecycleTest(TestCase):
         await self.namespace['async_setup_entry'](self.hass,self.entry)
         self.assertEqual(self.mqtt.async_subscribe.await_args.args[1],'+/bridge/devices')
 
+    async def test_sidebar_can_hide_without_removing_the_control_route(self):
+        self.entry.options={'mqtt_mode':'disabled','show_sidebar':False}
+        await self.namespace['async_setup_entry'](self.hass,self.entry)
+        panel=self.panel.async_register_panel.await_args_list[1].kwargs
+        self.assertIsNone(panel['sidebar_title'])
+        self.assertEqual(panel['frontend_url_path'],'lightshow-studio')
+
     async def test_mqtt_failure_retries_without_starting_scheduler_or_panel(self):
         self.mqtt.async_subscribe.side_effect=RuntimeError('offline')
         with self.assertRaises(RuntimeError):
