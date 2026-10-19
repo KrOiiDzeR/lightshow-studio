@@ -42,5 +42,31 @@ for(const tab of ['connection','lights','editor','shuffle','library']){
  config._settings.shuffle_scenes=[{pack_id:'halloween',scene_id:'castle'}];
  await config._click({target:{closest:()=>({dataset:{action:'remove-scene'}})}});
  assert.equal(config._settings.shuffle_scenes.length,0,'deleted scenes must leave the shuffle pool');
+ // Explicit HA fixtures must stay HA even when discovery finds a Z2M match.
+ config._settings.fixtures=[{entity_id:'light.ha',role:'other',friendly_name:'',endpoint:'auto',enabled:true,transport:'homeassistant'}];
+ config._hass.states={
+  'light.ha':{state:'on',attributes:{friendly_name:'Shelly RGBW',supported_color_modes:['rgbw']}},
+  'light.zigbee':{state:'on',attributes:{friendly_name:'Zigbee',supported_color_modes:['rgb']}},
+  'light.wifi':{state:'on',attributes:{friendly_name:'WLAN RGBWW',supported_color_modes:['rgbww']}}
+ };
+ config._data.suggestions={'light.ha':'matched-but-HA','light.zigbee':'zigbee-device'};
+ config._data.configuration={areas:[]};
+ assert(config._entitiesOptions('light.zigbee','zigbee2mqtt').includes('light.zigbee'));
+ assert(!config._entitiesOptions('light.zigbee','zigbee2mqtt').includes('light.wifi'));
+ assert(config._entitiesOptions('light.ha','homeassistant').includes('light.wifi'));
+ config._tab='lights';config._render();
+ assert(config.shadowRoot.innerHTML.includes('RGBW'));
+ assert(!config.shadowRoot.innerHTML.includes('data-field="fixture-friend"'));
+ await config._click({target:{closest:()=>({dataset:{action:'automap'}})}});
+ assert.equal(config._settings.fixtures[0].transport,'homeassistant');
+ assert.equal(config._settings.fixtures[0].friendly_name,'');
+ config._addTransport='zigbee2mqtt';
+ await config._click({target:{closest:()=>({dataset:{action:'add-fixture'}})}});
+ assert.equal(config._settings.fixtures[1].entity_id,'light.zigbee');
+ assert.equal(config._settings.fixtures[1].transport,'zigbee2mqtt');
+ config._addTransport='homeassistant';
+ await config._click({target:{closest:()=>({dataset:{action:'add-fixture'}})}});
+ assert.equal(config._settings.fixtures[2].entity_id,'light.wifi');
+ assert.equal(config._settings.fixtures[2].transport,'homeassistant');
  console.log('PASS: operation/configuration separation, tab guards and separate save payloads');
 })().catch(e=>{console.error(e);process.exit(1)});

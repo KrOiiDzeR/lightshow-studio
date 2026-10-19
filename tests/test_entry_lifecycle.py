@@ -40,7 +40,7 @@ class EntryLifecycleTest(TestCase):
                         'EVENT_HOMEASSISTANT_STOP':'stop','ConfigEntryNotReady':RuntimeError,
                         'StaticPathConfig':lambda *args:args,'websocket_api':NS(async_register_command=Mock()),
                         'vol':NS(Schema=lambda x:x,Required=lambda x:x,Optional=lambda x:x),'_LOGGER':Mock()}
-        for name in ('ws_get','ws_save','ws_operate','ws_areas','ws_connection','ws_start','ws_program','ws_stop','ws_preview'):
+        for name in ('ws_get','ws_save','ws_operate','ws_areas','ws_connection','ws_start','ws_program','ws_stop','ws_preview','ws_control'):
             self.namespace[name]=Mock()
         tree=ast.parse((PACKAGE/'__init__.py').read_text(encoding='utf-8'))
         nodes=[n for n in tree.body if isinstance(n,ast.AsyncFunctionDef) and n.name in
