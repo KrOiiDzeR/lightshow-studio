@@ -20,6 +20,11 @@ jobs:
       - run: python -m unittest discover -s tests -v
       - run: node --check custom_components/lightshow_studio/static/lightshow-studio.js
       - run: node tests/ui_smoke.cjs
+      - name: Browser regression and legacy resource migration
+        run: |
+          npm install --prefix "$RUNNER_TEMP/lightshow-browser" --no-save --package-lock=false playwright
+          "$RUNNER_TEMP/lightshow-browser/node_modules/.bin/playwright" install --with-deps chromium
+          PLAYWRIGHT_MODULE="$RUNNER_TEMP/lightshow-browser/node_modules/playwright" node scripts/preview_dev.cjs
       - run: python scripts/build_release.py
   hacs:
     runs-on: ubuntu-latest
