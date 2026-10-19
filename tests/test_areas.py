@@ -53,9 +53,10 @@ class AreaRunnersTest(TestCase):
         nodes=[n for n in tree.body if isinstance(n,(ast.ClassDef,ast.FunctionDef)) and n.name in {'Studio','StudioHub','mode_rgb'}]
         rgb=next(n for n in tree.body if isinstance(n,ast.Assign) and any(isinstance(t,ast.Name) and t.id=='RGB' for t in n.targets))
         ns={'__package__':'lightshow_studio','HomeAssistant':object,'Any':object,'Store':Store,'DOMAIN':'lightshow_studio',
+            'ha_effect_frame':__import__('lightshow_studio.ha_effects',fromlist=['frame']).frame,
             'defaults':defaults,'check_settings':check_settings,'migrate_v1':migrate_v1,
             'asyncio':asyncio,'dt_util':NS(now=lambda:self.now),'callback':lambda f:f,
-            '_LOGGER':logging.getLogger(__name__),'DYMERAS':set(),'EFFECTS':{'candle'},'json':json,
+            '_LOGGER':logging.getLogger(__name__),'DYMERAS':set(),'EFFECTS':__import__('lightshow_studio.settings',fromlist=['EFFECTS']).EFFECTS,'json':json,
             'scheduled_target':__import__('lightshow_studio.planning',fromlist=['scheduled_target']).scheduled_target,
             'shuffle_candidates':shuffle_candidates,'random':NS(choice=lambda choices:choices[0]),
             'timedelta':timedelta}

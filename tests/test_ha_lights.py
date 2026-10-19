@@ -3,6 +3,8 @@ from unittest import TestCase
 from inline_async import immediate_tests
 import test_areas
 from test_settings import fixture, defaults, check_settings
+from datetime import timedelta
+from lightshow_studio.settings import EFFECTS
 
 
 @immediate_tests
@@ -10,6 +12,7 @@ class HALightsTest(TestCase):
     def setUp(self):
         test_areas.AreaRunnersTest.setUp(self)
         self.runner = self.hub.areas['wall']
+        self.runner._apply.__globals__['EFFECTS'] = EFFECTS
         self.runner._dymera.__globals__['DYMERAS'] = {'046677585235'}
         self.fixture = fixture('light.wall', transport='homeassistant')
         self.cue = {'mode': 'red', 'brightness': 60, 'speed': 50, 'color': '#124578'}
@@ -65,14 +68,95 @@ class HALightsTest(TestCase):
             await self.runner._apply(self.fixture, self.cue)
             self.assertEqual(self.calls[-1][1]['color_temp_kelvin'], expected)
 
-    async def test_supported_effect_is_used_and_missing_effect_reports_fallback(self):
+    async def test_supported_effect_is_used_and_missing_effect_runs_ha_frames(self):
         self.cue['mode'] = 'candle'
         self.state.attributes = {'supported_color_modes': ['rgbw'], 'effect_list': ['candle']}
         self.assertIsNone(await self.runner._apply(self.fixture, self.cue))
         self.assertEqual(self.calls[-1][1]['effect'], 'candle')
         self.state.attributes['effect_list'] = []
-        self.assertIn('nicht unterstützt', await self.runner._apply(self.fixture, self.cue))
+        self.assertIsNone(await self.runner._apply(self.fixture, self.cue))
         self.assertIn('rgb_color', self.calls[-1][1])
+        self.assertNotIn('effect', self.calls[-1][1])
+        self.assertIn('light.wall', self.runner.ha_effects)
+
+    async def test_all_software_effects_advance_with_valid_standard_actions(self):
+        for mode in sorted(EFFECTS):
+            for color_mode in ['rgbw', 'rgbww', 'color_temp', 'brightness', 'onoff']:
+                with self.subTest(mode=mode, color_mode=color_mode):
+                    self.state.attributes = {'supported_color_modes': [color_mode]}
+                    self.cue['mode'] = mode
+                    await self.runner._apply(self.fixture, self.cue)
+                    first = self.calls[-1]
+                    self.now += timedelta(seconds=5)
+                    await self.runner.effect_tick()
+                    action, payload = self.calls[-1]
+                    self.assertNotIn('effect', payload)
+                    self.assertIn(action, ['turn_on', 'turn_off'])
+                    if color_mode == 'onoff':
+                        self.assertEqual(set(payload), {'entity_id'})
+                    if color_mode in ['rgbw', 'rgbww'] and mode not in ['blink']:
+                        self.assertIn('rgb_color', payload)
+                        self.assertNotEqual(first, self.calls[-1])
+                    if color_mode == 'color_temp' and action == 'turn_on' and mode != 'blink':
+                        self.assertIn('color_temp_kelvin', payload)
+
+    async def test_frame_rate_and_static_change_stop_effect(self):
+        self.cue['mode'] = 'colorloop'
+        await self.runner._apply(self.fixture, self.cue)
+        count = len(self.calls)
+        self.now += timedelta(seconds=1)
+        await self.runner.effect_tick()
+        self.assertEqual(len(self.calls), count)
+        self.now += timedelta(seconds=2)
+        await self.runner.effect_tick()
+        self.assertGreater(len(self.calls), count)
+        self.cue['mode'] = 'red'
+        await self.runner._apply(self.fixture, self.cue)
+        self.assertFalse(self.runner.ha_effects)
+
+    async def test_stop_clears_effect_before_snapshot_restore(self):
+        settings = self.runner.settings
+        settings['fixtures'][0]['transport'] = 'homeassistant'
+        settings['packs'][0]['scenes'][0]['tracks']['other']['mode'] = 'candle'
+        await self.runner.start('halloween', 'castle')
+        self.assertTrue(self.runner.ha_effects)
+        await self.runner.stop()
+        count = len(self.calls)
+        self.now += timedelta(seconds=5)
+        await self.runner.effect_tick()
+        self.assertFalse(self.runner.ha_effects)
+        self.assertEqual(len(self.calls), count)
+        self.assertEqual(self.state.state, 'off')
+
+    async def test_effect_failure_does_not_leave_an_orphan_runner(self):
+        self.cue['mode'] = 'candle'
+        async def fail(*args, **kwargs):
+            raise RuntimeError('light service failed')
+        self.hass.services.async_call = fail
+        with self.assertRaises(RuntimeError):
+            await self.runner._apply(self.fixture, self.cue)
+        self.assertFalse(self.runner.ha_effects)
+
+    async def test_rgbww_snapshot_and_parallel_area_survive_effect_stop(self):
+        self.state.state = 'on'
+        self.state.attributes = {'supported_color_modes': ['rgbww'], 'color_mode': 'rgbww',
+                                 'rgbww_color': [10, 20, 30, 140, 190], 'brightness': 84}
+        self.runner.settings['packs'][0]['scenes'][0]['tracks']['other']['mode'] = 'colorloop'
+        await self.runner.start('halloween', 'castle')
+        garden = self.hub.areas['garden']
+        garden.settings['packs'][0]['scenes'][0]['tracks']['other']['mode'] = 'candle'
+        await garden.start('halloween', 'castle')
+        await self.runner.stop()
+        self.assertEqual(self.calls[-1], ('turn_on', {'entity_id':'light.wall', 'brightness':84,
+                          'rgbww_color':[10,20,30,140,190]}))
+        self.assertTrue(garden.running)
+        self.assertTrue(garden.ha_effects)
+
+    def test_new_catalogue_lights_have_a_show_but_saved_off_is_preserved(self):
+        self.assertNotEqual(defaults()['packs'][0]['scenes'][0]['tracks']['other']['mode'], 'off')
+        data = defaults()
+        data['packs'][0]['scenes'][0]['tracks']['other']['mode'] = 'off'
+        self.assertEqual(check_settings(data)['packs'][0]['scenes'][0]['tracks']['other']['mode'], 'off')
 
     async def test_zero_brightness_turns_off_and_unknown_never_sends(self):
         self.cue['brightness'] = 0
