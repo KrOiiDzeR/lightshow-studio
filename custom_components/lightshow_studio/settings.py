@@ -10,13 +10,13 @@ ENDPOINTS = ("auto", "top", "bottom")
 EFFECTS = {"candle", "fireplace", "sparkle", "breathe", "blink", "colorloop", "sunset", "sunrise", "opal", "glisten", "underwater", "cosmos", "sunbeam", "enchant"}
 COLORS = {"red", "purple", "green", "warm", "blue", "gold", "ice", "white", "custom_color"}
 MODES = EFFECTS | COLORS | {"off"}
-ENTITY_RE = re.compile(r"^light\.[a-z0-9_]+$")
+ENTITY_RE = re.compile(r"^(?:light|switch)\.[a-z0-9_]+$")
 KEY_RE = re.compile(r"^[a-z][a-z0-9_]{0,39}$")
 TIME_RE = re.compile(r"^([01]\d|2[0-3]):[0-5]\d$")
 HEX_RE = re.compile(r"^#[a-fA-F0-9]{6}$")
 
 def role_for(entity_id: str) -> str:
-    return "upper" if entity_id.endswith("_top") else "lower" if entity_id.endswith("_bottom") else "entrance" if entity_id.endswith(("_entrance", "_door", "_haustur")) else "other"
+    return "lower" if entity_id.endswith("_bottom") else "entrance" if entity_id.endswith(("_entrance", "_door", "_haustur")) else "upper"
 
 
 def fixture(entity_id: str, *, role: str | None = None, friendly_name: str = "", endpoint: str | None = None, transport: str = "auto") -> dict:

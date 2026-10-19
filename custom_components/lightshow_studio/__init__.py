@@ -142,7 +142,7 @@ class Studio:
 
     def _dymera(self, f: dict) -> tuple[str, str] | None:
         # An explicit HA choice must never be overridden by discovery.
-        if f.get("transport", "auto") == "homeassistant":
+        if f["entity_id"].startswith("switch.") or f.get("transport", "auto") == "homeassistant":
             return None
         name = f["friendly_name"] or self.suggestions().get(f["entity_id"], "")
         device = next((d for d in self.devices if d["friendly_name"] == name), None)
@@ -176,6 +176,16 @@ class Studio:
         if st is None or st.state in ("unavailable", "unknown"):
             return f"{eid}: Entität ist nicht verfügbar"
         mode = cue["mode"]
+        if eid.startswith("switch."):
+            if mode == "blink" and cue["brightness"] and not effect_frame:
+                relay_cue = {**cue, "speed": 0}  # At least eight seconds per relay state.
+                await self._apply(f, ha_effect_frame(relay_cue, 0), effect_frame=True)
+                self.ha_effects[eid] = {"fixture": dict(f), "cue": relay_cue,
+                    "started": dt_util.now().timestamp(), "last": dt_util.now().timestamp()}
+                return None
+            action = "turn_off" if mode == "off" or cue["brightness"] == 0 else "turn_on"
+            await self.hass.services.async_call("switch", action, {"entity_id": eid}, blocking=True)
+            return None
         bright = max(1, round(cue["brightness"] * 2.54))
         native = self._dymera(f)
         if native:
@@ -233,6 +243,10 @@ class Studio:
 
     async def _restore(self, eid: str, snapshot: dict, native: tuple[str, str] | None = None):
         self.ha_effects.pop(eid, None)
+        if eid.startswith("switch."):
+            action = "turn_on" if snapshot["state"] == "on" else "turn_off"
+            await self.hass.services.async_call("switch", action, {"entity_id": eid}, blocking=True)
+            return
         target = native or self.native.get(eid)
         if target:
             try:
@@ -799,7 +813,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         config={"mode": "configuration"})
     await panel_custom.async_register_panel(
         hass, frontend_url_path=CONTROL_PATH, webcomponent_name="lightshow-studio-panel",
-        module_url=MODULE_URL, sidebar_title="Lightshow Studio", sidebar_icon="mdi:party-popper",
+        module_url=MODULE_URL, sidebar_title="Lightshow Studio" if studio.connection.get("show_sidebar", True) else None, sidebar_icon="mdi:party-popper",
         require_admin=True, config={"mode": "operation"})
     dr.async_get(hass).async_get_or_create(
         config_entry_id=entry.entry_id, identifiers={(DOMAIN, DOMAIN)},
@@ -889,7 +903,7 @@ async def ws_control(hass: HomeAssistant, conn: websocket_api.ActiveConnection, 
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/connection", vol.Required("connection"): dict})
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/connection", vol.Required("connection"): dict, vol.Optional("area_id"): str})
 @websocket_api.async_response
 async def ws_connection(hass: HomeAssistant, conn: websocket_api.ActiveConnection, msg: dict):
     from .config_flow import validate_connection
@@ -897,8 +911,8 @@ async def ws_connection(hass: HomeAssistant, conn: websocket_api.ActiveConnectio
         studio = hass.data[DOMAIN]
         if studio.running or studio.preview_tasks:
             raise ValueError("Bitte zuerst Show bzw. Vorschau beenden")
-        values = validate_connection(hass, msg["connection"])
         entry = next(iter(hass.config_entries.async_entries(DOMAIN)))
+        values = validate_connection(hass, {**entry.data, **entry.options, **msg["connection"]})
         hass.config_entries.async_update_entry(entry, options=values)
         conn.send_result(msg["id"], {"saved": True, "connection": values})
     except ValueError as err:

@@ -16,6 +16,7 @@ def connection_schema(values: dict, mqtt_available: bool) -> vol.Schema:
             selector.SelectSelector(selector.SelectSelectorConfig(
                 options=["auto", "manual", "disabled"], translation_key="mqtt_mode")),
         vol.Optional("mqtt_base_topic", default=values.get("mqtt_base_topic", "")): str,
+        vol.Optional("show_sidebar", default=values.get("show_sidebar", True)): bool,
     })
 
 
@@ -29,7 +30,9 @@ def validate_connection(hass, values: dict) -> dict:
         prefix = base_topic(values.get("mqtt_base_topic", "")) if mode == "manual" else ""
     except ValueError as err:
         raise ValueError("invalid_topic") from err
-    return {"mqtt_mode": mode, "mqtt_base_topic": prefix}
+    if type(values.get("show_sidebar", True)) is not bool:
+        raise ValueError("invalid_sidebar")
+    return {"mqtt_mode": mode, "mqtt_base_topic": prefix, "show_sidebar": values.get("show_sidebar", True)}
 
 
 class StudioConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
