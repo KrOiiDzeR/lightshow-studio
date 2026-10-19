@@ -1,5 +1,27 @@
 # Änderungen
 
+## 2.2.0-beta.2
+
+Öffentliche 2.2-Vorabversion mit gemischten Lampenquellen und sechs neuen Bedienfunktionen.
+
+- Home-Assistant-Lampen unabhängig von Zigbee2MQTT auswählen; RGB, RGBW, RGBWW, Dimmer, Weißtemperatur und Ein/Aus je nach Gerätefähigkeit. Explizite HA-Anbindung wird nie auf direkte MQTT-Steuerung umgestellt.
+- Favoriten pro Bereich, mehrere Bereiche gemeinsam starten/stoppen, Ausschalt-Timer und Shuffle-Runden ohne Wiederholungen.
+- Bereiche mit Szenen/Paketen kopieren, Lampen neu zuordnen; kopierte Zeitpläne bleiben deaktiviert. Sanfte Übergänge für unterstützte statische HA-Lichtbefehle.
+- Veraltete manuelle Dashboard-Ressourcen blockieren die neue Oberfläche nicht mehr. Browserprüfung mit tatsächlichen älteren v2-/v2.1-Karten bestanden; vorhandene Karten müssen nicht umgeschrieben werden.
+- 81 Python-Tests, UI-Smoke-Test und interaktive Browserregression bestanden. Release zusätzlich durch HACS-/hassfest-Prüfungen und Browserregression auf GitHub abgesichert.
+- Voraussetzung HA 2026.10+. Backup erstellen, Update über HACS installieren, HA neu starten und Browser neu laden. Timer werden bei Neustart/Reload gelöscht; native Geräteeffekte unterstützen nicht alle Übergänge. Vollständige neue Hardwaretests stehen weiterhin aus.
+
+
+## 2.2.0-beta.1
+
+Nur lokaler Teststand, nicht veröffentlicht.
+
+- Lampenquellen Home Assistant / Zigbee2MQTT getrennt auswählen; HA-Lampen werden nicht automatisch auf direktes MQTT umgestellt.
+- RGBW-/RGBWW-Zustände vollständig zurücksetzen; passende Befehle für reine Dimmer, Ein/Aus und Weißtemperaturen.
+- Bereichsfavoriten, gemeinsame Bereichssteuerung, Ausschalt-Timer, Shuffle-Runden ohne Wiederholung, Bereichskopie und sanfte HA-Übergänge.
+- 81 Python-Tests, UI-Smoke-Test und interaktive Demo-Browserprüfung. Noch kein neuer realer HA-/Hardwaretest.
+- Details, Bedienung und Grenzen: docs/TEST-2.2.md.
+
 ## 2.1.0-beta.6
 
 Erste öffentliche 2.1-Beta mit den zusammengeführten Verbesserungen aus der lokalen Entwicklung.

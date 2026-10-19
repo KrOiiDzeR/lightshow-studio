@@ -1,14 +1,24 @@
 # ✨ Lightshow Studio
 
+> **Neu in 2.2:** gemischte Lampenquellen, Favoriten, gemeinsame Bereichssteuerung, Timer, Shuffle-Runden, Bereichskopie und sanfte Übergänge. [Bedienung und Teststatus](docs/TEST-2.2.md).
+
 Lokale Lichtshows für Home Assistant: Halloween, Weihnachten, Party und Ambiente.
 Szenen, JSON-Pakete, Show-Abläufe, Shuffle, Wind, Jahreszeiten und Wochenprogramm.
 Philips Hue Dymera wird über Zigbee2MQTT getrennt nach oben/unten unterstützt.
 
-**Version 2.1.0-beta.6.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
+**Version 2.2.0-beta.2.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
 Voraussetzungen: Home Assistant **2026.10 oder neuer**, HACS und für native Dymera-Steuerung eine eingerichtete MQTT-/Zigbee2MQTT-Anbindung.
 Die Integration bleibt eine Beta. Automatische Prüfungen und Browserprüfungen mit Beispieldaten ersetzen keinen vollständigen Hardwaretest; den genauen Stand dokumentiert [VALIDATION.md](docs/VALIDATION.md).
 
 ![Bedienung im Dashboard](docs/dev-dashboard-dark.png)
+
+## Alle Home-Assistant-Lampen verwenden
+
+Unter **Konfiguration → Lampen → Lampenquelle** zwischen **Home Assistant** und **Zigbee2MQTT** wählen. Home Assistant enthält alle verfügbaren `light.*`-Entitäten, einschließlich Shelly-/WLAN-Leuchten mit RGB, RGBW oder RGBWW. Diese Anbindung benötigt keine direkte MQTT-Verbindung und bleibt auch bei automatischer Erkennung ausdrücklich auf HA gestellt. Beide Anbindungen dürfen im selben Bereich vorkommen. Die Zigbee2MQTT-Auswahl zeigt erkannte, mit HA-Lichtentitäten verbundene Lampen; native Dymera-Effekte bleiben direkt, andere Z2M-Leuchten verwenden HA. Fähigkeiten und Anbindung werden pro Lampe angezeigt.
+
+## Neue Bedienfunktionen
+
+Im Dashboard Szenen als **Favoriten** merken und direkt starten, mehrere **Bereiche gemeinsam bedienen** oder nach dem Start einen **Ausschalt-Timer** setzen. Unter Übergänge & Shuffle-Runden lassen sich **0–30 Sekunden Überblendung** und **Shuffle ohne Wiederholungen** einstellen. Bereiche werden im Konfigurationsbereich **kopiert**; die Kopie beginnt ohne Lampenzuordnung und mit deaktivierten Zeitplänen. Einzelheiten und Grenzen: [2.2-Anleitung](docs/TEST-2.2.md).
 
 ## Unabhängige Bereiche und parallele Shows
 
@@ -52,7 +62,7 @@ Konfiguration und Bedienung erfordern aktuell ein HA-Administratorkonto.
 ## Installation mit HACS – ohne Konfigurationsdateien
 
 1. In HACS **Menü → Benutzerdefinierte Repositories** öffnen und `https://github.com/KrOiiDzeR/lightshow-studio` als Typ **Integration** hinzufügen.
-2. **Lightshow Studio** öffnen und `v2.1.0-beta.6` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
+2. **Lightshow Studio** öffnen und `v2.2.0-beta.2` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
 3. Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Lightshow Studio** öffnen.
 5. Zigbee2MQTT-Erkennung auswählen: automatisch, eigene Bridge oder nur HA-Lampen. Ohne direkte MQTT-Anbindung stehen unterstützte Funktionen vorhandener HA-Lichtentitäten zur Verfügung.
@@ -87,7 +97,7 @@ Neue oder importierte Szenen werden einer bereits festgelegten Auswahl nicht aut
 
 Im Dashboard wird Shuffle eingeschaltet und das Wechselintervall eingestellt. Dort erscheint auch die Anzahl der ausgewählten Szenen.
 Eine leere Auswahl führt zu keinem zufälligen Wechsel. Bei nur einer ausgewählten Szene bleibt diese nach Erreichen aktiv.
-Die unmittelbar zuvor aktive Szene wird beim nächsten Zufallswechsel ausgelassen. Feste Show-Abläufe behalten ihre Reihenfolge.
+Standardmäßig werden erst alle ausgewählten Szenen einmal gespielt und anschließend neu gemischt. Auch an der Rundengrenze wird die unmittelbar letzte Szene nicht sofort wiederholt. Im Dashboard kann dieses Rundenverhalten abgeschaltet werden. Feste Show-Abläufe behalten ihre Reihenfolge.
 Die Auswahl wird wie andere Konfigurationsänderungen erst nach Stoppen des Bereichs gespeichert.
 Solange noch keine eigene Auswahl gespeichert wurde, verwendet Shuffle wie bisher die Szenen des gestarteten Pakets.
 
