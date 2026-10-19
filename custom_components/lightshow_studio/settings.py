@@ -19,9 +19,9 @@ def role_for(entity_id: str) -> str:
     return "upper" if entity_id.endswith("_top") else "lower" if entity_id.endswith("_bottom") else "entrance" if entity_id.endswith(("_entrance", "_door", "_haustur")) else "other"
 
 
-def fixture(entity_id: str, *, role: str | None = None, friendly_name: str = "", endpoint: str | None = None) -> dict:
+def fixture(entity_id: str, *, role: str | None = None, friendly_name: str = "", endpoint: str | None = None, transport: str = "auto") -> dict:
     return {"entity_id": entity_id, "role": role or role_for(entity_id), "friendly_name": friendly_name,
-            "endpoint": endpoint or ("top" if entity_id.endswith("_top") else "bottom" if entity_id.endswith("_bottom") else "auto"), "enabled": True}
+            "endpoint": endpoint or ("top" if entity_id.endswith("_top") else "bottom" if entity_id.endswith("_bottom") else "auto"), "enabled": True, "transport": transport}
 
 
 def defaults() -> dict:
@@ -128,6 +128,8 @@ def check_settings(data: dict) -> dict:
             raise ValueError("Leuchtengruppe/Endpunkt ungültig")
         if not isinstance(f.get("friendly_name"), str) or len(f["friendly_name"]) > 150:
             raise ValueError("Ungültiger Zigbee2MQTT-Gerätename")
+        if f.get("transport", "auto") not in ("auto", "homeassistant", "zigbee2mqtt"):
+            raise ValueError("Unbekannte Lampenanbindung")
     packs = data.get("packs")
     if not isinstance(packs, list) or not 1 <= len(packs) <= 30:
         raise ValueError("1 bis 30 Pakete erlaubt")
@@ -154,10 +156,16 @@ def check_settings(data: dict) -> dict:
     interval = opts.get("shuffle_interval")
     if type(interval) is not int or not 60 <= interval <= 3600:
         raise ValueError("Szenenwechsel: 60 bis 3600 Sekunden")
+    if type(opts.get("shuffle_no_repeat", True)) is not bool:
+        raise ValueError("Shuffle-Rundenoption ungültig")
+    if type(opts.get("transition", 0)) is not int or not 0 <= opts.get("transition", 0) <= 30:
+        raise ValueError("Übergang: 0 bis 30 Sekunden")
     from .planning import validate_weekly
     validate_weekly(data.get("weekly", []), packs)
     from .shuffle import validate_shuffle
     validate_shuffle(data)
+    if "favorites" in data:
+        validate_shuffle({**data, "shuffle_scenes": data["favorites"]})
     return copy.deepcopy(data)
 
 

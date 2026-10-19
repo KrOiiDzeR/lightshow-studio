@@ -76,6 +76,8 @@ class Studio:
         self.manual_stop_date: str | None = None
         self.last_shuffle = dt_util.now()
         self.last_wind = dt_util.now()
+        self.shuffle_seen = set()
+        self.stop_at = None
         self._lock = asyncio.Lock()
 
     async def load(self):
@@ -129,13 +131,16 @@ class Studio:
     def data(self) -> dict:
         return {"settings": self.settings, "connection": self.connection, "devices": self.devices, "suggestions": self.suggestions(),
                 "migrated": self.migrated,
-                "status": {"running": self.running, "pack_id": self.active_pack, "scene_id": self.active_scene, "program_id": self.active_program,
+                "status": {"running": self.running, "stop_at": self.stop_at, "pack_id": self.active_pack, "scene_id": self.active_scene, "program_id": self.active_program,
                            "source": self.run_source, "previewing": list(self.preview_tasks), "warnings": self.messages[-15:]}}
 
     def _fixture(self, eid: str) -> dict | None:
         return next((f for f in self.settings["fixtures"] if f["entity_id"] == eid), None)
 
     def _dymera(self, f: dict) -> tuple[str, str] | None:
+        # An explicit HA choice must never be overridden by discovery.
+        if f.get("transport", "auto") == "homeassistant":
+            return None
         name = f["friendly_name"] or self.suggestions().get(f["entity_id"], "")
         device = next((d for d in self.devices if d["friendly_name"] == name), None)
         if not device or device["model"] not in DYMERAS:
@@ -155,21 +160,22 @@ class Studio:
         if st is None or st.state in ("unavailable", "unknown"):
             return None
         props = st.attributes
-        return {"state": st.state, "brightness": props.get("brightness"),
+        return {"state": st.state, "brightness": props.get("brightness"), "color_mode": props.get("color_mode"),
                 "rgb_color": props.get("rgb_color"), "hs_color": props.get("hs_color"),
+                "rgbw_color": props.get("rgbw_color"), "rgbww_color": props.get("rgbww_color"), "xy_color": props.get("xy_color"),
                 "color_temp_kelvin": props.get("color_temp_kelvin"), "effect": props.get("effect")}
 
     async def _apply(self, f: dict, cue: dict) -> str | None:
         eid = f["entity_id"]
         st = self.hass.states.get(eid)
-        if st is None or st.state == "unavailable":
+        if st is None or st.state in ("unavailable", "unknown"):
             return f"{eid}: Entität ist nicht verfügbar"
         mode = cue["mode"]
         bright = max(1, round(cue["brightness"] * 2.54))
         native = self._dymera(f)
         if native:
             name, ep = native
-            if mode == "off":
+            if mode == "off" or cue["brightness"] == 0:
                 await self._publish(name, {f"effect_{ep}": "stop_effect"})
                 await self._publish(name, {f"state_{ep}": "OFF"})
             elif mode in EFFECTS:
@@ -181,12 +187,19 @@ class Studio:
                 await self._publish(name, {f"state_{ep}": "ON", f"brightness_{ep}": bright,
                                            f"color_{ep}": {"r": r, "g": g, "b": b}})
             return None
-        if mode == "off":
-            await self.hass.services.async_call("light", "turn_off", {"entity_id": eid}, blocking=True)
+        if mode == "off" or cue["brightness"] == 0:
+            off = {"entity_id": eid}
+            if self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
+                off["transition"] = self.settings["options"]["transition"]
+            await self.hass.services.async_call("light", "turn_off", off, blocking=True)
             return None
-        kwargs = {"entity_id": eid, "brightness": bright}
+        kwargs = {"entity_id": eid}
+        if mode not in EFFECTS and self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
+            kwargs["transition"] = self.settings["options"]["transition"]
         available = st.attributes.get("effect_list") or []
         color_modes = st.attributes.get("supported_color_modes") or []
+        if any(x != "onoff" for x in color_modes):
+            kwargs["brightness"] = bright
         color_ok = any(x in color_modes for x in ("hs", "rgb", "xy", "rgbw", "rgbww"))
         note = None
         if mode in EFFECTS:
@@ -196,10 +209,18 @@ class Studio:
                 note = f"{eid}: Effekt {mode} nicht unterstützt; stattdessen warmes Licht"
                 if color_ok:
                     kwargs["rgb_color"] = RGB["warm"]
+                elif "color_temp" in color_modes:
+                    low = st.attributes.get("min_color_temp_kelvin", 2000)
+                    high = st.attributes.get("max_color_temp_kelvin", 6500)
+                    kwargs["color_temp_kelvin"] = max(low, min(high, 2700))
         elif color_ok:
             kwargs["rgb_color"] = mode_rgb(cue)
+        elif "color_temp" in color_modes and mode in ("warm", "white", "ice"):
+            low = st.attributes.get("min_color_temp_kelvin", 2000)
+            high = st.attributes.get("max_color_temp_kelvin", 6500)
+            kwargs["color_temp_kelvin"] = max(low, min(high, {"warm": 2700, "white": 4000, "ice": 6500}[mode]))
         else:
-            note = f"{eid}: keine Farbsteuerung unterstützt; nur Helligkeit gesetzt"
+            note = f"{eid}: keine Farbsteuerung unterstützt; {'nur Helligkeit gesetzt' if 'brightness' in kwargs else 'nur eingeschaltet'}"
         await self.hass.services.async_call("light", "turn_on", kwargs, blocking=True)
         return note
 
@@ -216,7 +237,10 @@ class Studio:
         data = {"entity_id": eid}
         if snapshot.get("brightness") is not None:
             data["brightness"] = snapshot["brightness"]
-        if snapshot.get("color_temp_kelvin") is not None:
+        color_key = {"rgbw": "rgbw_color", "rgbww": "rgbww_color", "rgb": "rgb_color", "hs": "hs_color", "xy": "xy_color"}.get(snapshot.get("color_mode"))
+        if color_key and snapshot.get(color_key) is not None:
+            data[color_key] = list(snapshot[color_key])
+        elif snapshot.get("color_temp_kelvin") is not None:
             data["color_temp_kelvin"] = snapshot["color_temp_kelvin"]
         elif snapshot.get("hs_color") is not None:
             data["hs_color"] = list(snapshot["hs_color"])
@@ -291,6 +315,7 @@ class Studio:
             await self._change_locked(pack_id, program["steps"][0]["scene_id"])
             self.running = True
             self.run_source = source
+            self.shuffle_seen = {(pack_id, self.active_scene)}
 
     async def start(self, pack_id: str, scene_id: str, source: str = "manual"):
         async with self._lock:
@@ -302,8 +327,11 @@ class Studio:
             self.active_program = ""
             self.running = True
             self.run_source = source
+            self.shuffle_seen = {(pack_id, scene_id)}
 
     async def _stop_locked(self):
+        self.stop_at = None
+        self.shuffle_seen = set()
         if not self.running:
             return
         self.running = False
@@ -363,6 +391,9 @@ class Studio:
 
     async def tick(self):
         now = dt_util.now()
+        if self.running and self.stop_at is not None and now.timestamp() >= self.stop_at:
+            await self.stop(manual=True)
+            return
         day = now.date()
         target = scheduled_target(self.settings, now)
         if self.running and self.run_source == "schedule" and (not target or target[0] != self.schedule_key):
@@ -387,7 +418,17 @@ class Studio:
             choices = shuffle_candidates(self.settings, self.active_pack, self.active_scene)
             if choices:
                 async with self._lock:
-                    await self._change_locked(*random.choice(choices))
+                    if opts.get("shuffle_no_repeat", True):
+                        self.shuffle_seen.add((self.active_pack, self.active_scene))
+                        remaining = [pair for pair in choices if pair not in self.shuffle_seen]
+                        if not remaining:
+                            self.shuffle_seen = set()
+                            remaining = choices
+                        selected = random.choice(remaining)
+                        self.shuffle_seen.add(selected)
+                    else:
+                        selected = random.choice(choices)
+                    await self._change_locked(*selected)
             else:
                 self.last_shuffle = now
         if self.running and opts["wind"] and (now - self.last_wind).total_seconds() >= 30:
@@ -486,7 +527,7 @@ class StudioHub:
             summaries.append({**self.metadata[item_id], "running": runner.running,
                               "previewing": bool(runner.preview_tasks), "warnings": runner.messages[-15:],
                               "pack": pack.get("name", ""), "scene": scene.get("name", ""),
-                              "program": program.get("name", ""), "source": runner.run_source,
+                              "program": program.get("name", ""), "source": runner.run_source, "stop_at": runner.stop_at,
                               "lights": sum(f["enabled"] for f in runner.settings["fixtures"])})
         result.update(area_id=key, areas=summaries, configuration=self.configuration(),
                       connection=self.connection, migrated=self.migrated)
@@ -523,10 +564,21 @@ class StudioHub:
         import copy
         async with self._lock:
             candidate = copy.deepcopy(self.configuration())
-            if action == "add":
+            if action in ("add", "copy"):
                 import uuid
                 key = "area_" + uuid.uuid4().hex[:12]
-                candidate["areas"].append({"id": key, "name": name, "icon": icon, "settings": defaults()})
+                settings = defaults()
+                if action == "copy":
+                    source = self._area(area_id)
+                    settings = copy.deepcopy(source.settings)
+                    settings["fixtures"] = []
+                    for pack in settings["packs"]:
+                        pack["schedule"]["enabled"] = False
+                        for scene in pack["scenes"]:
+                            scene["overrides"] = []
+                    for row in settings.get("weekly", []):
+                        row["enabled"] = False
+                candidate["areas"].append({"id": key, "name": name, "icon": icon, "settings": settings})
             elif action == "restore":
                 if self.running or self.preview_tasks:
                     raise ValueError("Vor vollständiger Wiederherstellung alle Bereiche stoppen")
@@ -551,6 +603,56 @@ class StudioHub:
     async def start(self, pack_id, scene_id, area_id=None):
         async with self._lock:
             await self._area(area_id).start(pack_id, scene_id)
+
+    async def control(self, action, area_id=None, area_ids=None, pack_id="", scene_id="", minutes=0):
+        """Small runtime commands; validate all group targets before changing lights."""
+        import copy
+        async with self._lock:
+            area = self._area(area_id)
+            if action == "timer":
+                if type(minutes) is not int or not 0 <= minutes <= 720:
+                    raise ValueError("Timer: 0 bis 720 Minuten")
+                if minutes and not area.running:
+                    raise ValueError("Bitte zuerst die Show starten")
+                area.stop_at = dt_util.now().timestamp() + minutes * 60 if minutes else None
+                return {}
+            if action == "favorite":
+                area._pack_scene(pack_id, scene_id)
+                candidate = copy.deepcopy(self.configuration())
+                key = next(key for key, runner in self.areas.items() if runner is area)
+                settings = next(row["settings"] for row in candidate["areas"] if row["id"] == key)
+                pair = {"pack_id": pack_id, "scene_id": scene_id}
+                favorites = settings.setdefault("favorites", [])
+                if pair in favorites:
+                    favorites.remove(pair)
+                else:
+                    favorites.append(pair)
+                await self._persist(candidate)
+                return {}
+            if action not in ("start_selected", "stop_selected"):
+                raise ValueError("Unbekannte Bedienaktion")
+            if not isinstance(area_ids, list) or not 1 <= len(area_ids) <= 30 or any(not isinstance(key, str) for key in area_ids) or len(set(area_ids)) != len(area_ids):
+                raise ValueError("Bitte 1 bis 30 unterschiedliche Bereiche auswählen")
+            targets = [(key, self._area(key)) for key in area_ids]
+            if action == "start_selected":
+                for key, runner in targets:
+                    try:
+                        runner._pack_scene(pack_id, scene_id)
+                    except ValueError as err:
+                        raise ValueError(f"{self.metadata[key]['name']}: ausgewählte Szene fehlt") from err
+                    if not any(f["enabled"] for f in runner.settings["fixtures"]):
+                        raise ValueError(f"{self.metadata[key]['name']}: keine aktive Lampe")
+            results = {}
+            for key, runner in targets:
+                try:
+                    if action == "start_selected":
+                        await runner.start(pack_id, scene_id)
+                    else:
+                        await runner.stop()
+                    results[key] = {"ok": True, "warnings": runner.messages[-15:]}
+                except Exception as err:
+                    results[key] = {"ok": False, "error": str(err)}
+            return results
 
     async def start_program(self, pack_id, program_id, area_id=None):
         async with self._lock:
@@ -593,7 +695,7 @@ async def async_setup(hass: HomeAssistant, config: dict) -> bool:
 
     hass.services.async_register(DOMAIN, "stop", service_stop, schema=vol.Schema({vol.Optional("area_id"): str}))
     hass.services.async_register(DOMAIN, "start_program", service_program, schema=vol.Schema({vol.Required("pack_id"): str, vol.Required("program_id"): str, vol.Optional("area_id"): str}))
-    for handler in (ws_get, ws_save, ws_operate, ws_areas, ws_connection, ws_start, ws_program, ws_stop, ws_preview):
+    for handler in (ws_get, ws_save, ws_operate, ws_areas, ws_connection, ws_start, ws_program, ws_stop, ws_preview, ws_control):
         websocket_api.async_register_command(hass, handler)
     return True
 
@@ -717,6 +819,21 @@ async def ws_areas(hass: HomeAssistant, conn: websocket_api.ActiveConnection, ms
         conn.send_result(msg["id"], studio.data(selected))
     except (ValueError, KeyError, TypeError) as err:
         conn.send_error(msg["id"], "invalid_area", str(err))
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): f"{DOMAIN}/control", vol.Required("action"): str,
+    vol.Optional("area_id"): str, vol.Optional("area_ids"): [str], vol.Optional("pack_id"): str,
+    vol.Optional("scene_id"): str, vol.Optional("minutes"): int})
+@websocket_api.async_response
+async def ws_control(hass: HomeAssistant, conn: websocket_api.ActiveConnection, msg: dict):
+    try:
+        studio = hass.data[DOMAIN]
+        results = await studio.control(msg["action"], msg.get("area_id"), msg.get("area_ids"),
+                                       msg.get("pack_id", ""), msg.get("scene_id", ""), msg.get("minutes", 0))
+        conn.send_result(msg["id"], {**studio.data(msg.get("area_id")), "control_results": results})
+    except (ValueError, KeyError, TypeError) as err:
+        conn.send_error(msg["id"], "invalid_control", str(err))
 
 
 @websocket_api.require_admin

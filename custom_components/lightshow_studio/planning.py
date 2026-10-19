@@ -53,7 +53,7 @@ def operation_settings(current: dict, changes: dict) -> dict:
     data = copy.deepcopy(current)
     if "options" in changes:
         options = changes["options"]
-        if not isinstance(options, dict) or set(options) - {"shuffle", "shuffle_interval", "wind"}:
+        if not isinstance(options, dict) or set(options) - {"shuffle", "shuffle_interval", "wind", "shuffle_no_repeat", "transition"}:
             raise ValueError("Unbekannte Bedienoption")
         data["options"].update(options)
     if "schedules" in changes:
