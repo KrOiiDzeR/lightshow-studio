@@ -9,7 +9,7 @@ def cue(mode: str, brightness: int = 70, speed: int = 55, color: str = "#FF8730"
 def scene(key: str, name: str, icon: str, upper: dict, lower: dict, entrance: dict, other: dict | None = None) -> dict:
     return {"id": key, "name": name, "icon": icon, "description": "", "tracks": {
         "upper": upper, "lower": lower, "entrance": entrance,
-        "other": other if other is not None else cue("off")}, "overrides": []}
+        "other": other if other is not None else dict(upper)}, "overrides": []}
 
 
 def pack(key: str, name: str, icon: str, description: str, month: int, day: int, scenes: list[dict]) -> dict:

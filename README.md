@@ -1,12 +1,14 @@
 # ✨ Lightshow Studio
 
+> **Neu in 2.3.0-beta.1:** Studio A und Softwareeffekte für normale HA-Lampen. [Änderungen und Testanleitung](docs/TEST-2.3.md).
+
 > **Neu in 2.2:** gemischte Lampenquellen, Favoriten, gemeinsame Bereichssteuerung, Timer, Shuffle-Runden, Bereichskopie und sanfte Übergänge. [Bedienung und Teststatus](docs/TEST-2.2.md).
 
 Lokale Lichtshows für Home Assistant: Halloween, Weihnachten, Party und Ambiente.
 Szenen, JSON-Pakete, Show-Abläufe, Shuffle, Wind, Jahreszeiten und Wochenprogramm.
 Philips Hue Dymera wird über Zigbee2MQTT getrennt nach oben/unten unterstützt.
 
-**Version 2.2.0-beta.2.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
+**Version 2.3.0-beta.1.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
 Voraussetzungen: Home Assistant **2026.10 oder neuer**, HACS und für native Dymera-Steuerung eine eingerichtete MQTT-/Zigbee2MQTT-Anbindung.
 Die Integration bleibt eine Beta. Automatische Prüfungen und Browserprüfungen mit Beispieldaten ersetzen keinen vollständigen Hardwaretest; den genauen Stand dokumentiert [VALIDATION.md](docs/VALIDATION.md).
 
@@ -62,7 +64,7 @@ Konfiguration und Bedienung erfordern aktuell ein HA-Administratorkonto.
 ## Installation mit HACS – ohne Konfigurationsdateien
 
 1. In HACS **Menü → Benutzerdefinierte Repositories** öffnen und `https://github.com/KrOiiDzeR/lightshow-studio` als Typ **Integration** hinzufügen.
-2. **Lightshow Studio** öffnen und `v2.2.0-beta.2` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
+2. **Lightshow Studio** öffnen und `v2.3.0-beta.1` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
 3. Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Lightshow Studio** öffnen.
 5. Zigbee2MQTT-Erkennung auswählen: automatisch, eigene Bridge oder nur HA-Lampen. Ohne direkte MQTT-Anbindung stehen unterstützte Funktionen vorhandener HA-Lichtentitäten zur Verfügung.

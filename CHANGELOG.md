@@ -1,5 +1,16 @@
 # Änderungen
 
+## 2.3.0-beta.1
+
+Öffentliche Vorabversion mit Studio A und Softwareeffekten für normale Home-Assistant-Lampen.
+
+- Studio A umgesetzt: Bereichsleiste, kompakter Show-Player, Szenen und Atmosphäre nebeneinander, Lampenzeilen mit aufklappbaren Details. Einrichtung und Bedienung bleiben getrennt, alle bestehenden Funktionen erreichbar.
+- Gewöhnliche HA-Lampen verwenden ausschließlich `light.turn_on` / `light.turn_off`. RGB wird von HA in unterstützte RGBW-/RGBWW-/HS-/XY-Modi übersetzt; Weißtemperaturen werden auf den Gerätebereich begrenzt, reine Ein/Aus-Lampen erhalten keine Farb- oder Dimmbefehle.
+- Nicht vorhandene Geräteeffekte werden jetzt über langsame HA-Show-Frames umgesetzt statt durch statisches warmes Licht ersetzt. Maximal ein Frame pro Lampe alle zwei Sekunden; Geschwindigkeit beeinflusst den Verlauf. Ein/Aus-Lampen bleiben bei Farbeffekten an und wechseln nur bei ausdrücklich gewähltem Blinken zwischen An und Aus.
+- Neue Standardpakete spielen auch in der Gruppe „Andere“. Gespeicherte Aus-Einstellungen bleiben erhalten. Eine sichtbare, ausdrücklich auszulösende Übernahme der Oben-Einstellung hilft bei älteren Paketen.
+- Effekte werden vor dem Rücksetzen entfernt; getrennte Bereiche laufen unabhängig. Vorschau, Szenenwechsel und Rücksetzen werden mit der Frame-Steuerung abgestimmt.
+- Automatisierte Tests und lokale Browserprüfung; noch kein Nachweis an den echten Shelly-/WLAN-Lampen. Details in `docs/TEST-2.3.md`.
+
 ## 2.2.0-beta.2
 
 Öffentliche 2.2-Vorabversion mit gemischten Lampenquellen und sechs neuen Bedienfunktionen.

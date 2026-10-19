@@ -25,7 +25,7 @@ const config=new (classes.get('lightshow-studio-configuration'))();
 config._settings=data;config._data=card._data;config._hass=card._hass;
 Object.defineProperty(config,'isConnected',{get:()=>true});
 for(const tab of ['connection','lights','editor','shuffle','library']){
- config._tab=tab;config._render();assert(config.shadowRoot.innerHTML.includes('Lightshow einrichten'));
+ config._tab=tab;config._render();assert(config.shadowRoot.innerHTML.includes('Konfiguration'));
  assert(!config.shadowRoot.innerHTML.includes('data-action="start"'));
  assert(!config.shadowRoot.innerHTML.includes('undefined'));
 }

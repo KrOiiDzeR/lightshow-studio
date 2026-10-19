@@ -37,6 +37,7 @@ class RoutingTest(unittest.TestCase):
         exec(compile(ast.fix_missing_locations(ast.Module(body=[test_class], type_ignores=[])), str(path), 'exec'), namespace)
         self.studio = namespace['StudioUnderTest']()
         self.studio.devices = []
+        self.studio.ha_effects = {}
         self.studio._devices_by_base = {}
         self.studio.suggestions = lambda: {}
         self.studio.hass = SimpleNamespace(states=SimpleNamespace(get=lambda eid: SimpleNamespace(state='off')))

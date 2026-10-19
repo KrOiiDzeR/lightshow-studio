@@ -15,7 +15,7 @@ PACKAGE = Path(__file__).resolve().parents[1] / 'custom_components/lightshow_stu
 class EntryLifecycleTest(TestCase):
     def setUp(self):
         self.studio=NS(load=AsyncMock(), stop=AsyncMock(), start=AsyncMock(), start_program=AsyncMock(),
-                       preview_tasks={}, got_devices=Mock(), tick=AsyncMock())
+                       preview_tasks={}, areas={}, got_devices=Mock(), tick=AsyncMock())
         self.unsubscribe=Mock()
         self.cancel=Mock()
         self.frontend=NS(add_extra_js_url=Mock(),remove_extra_js_url=Mock(),async_remove_panel=Mock())
@@ -82,7 +82,7 @@ class EntryLifecycleTest(TestCase):
         # HA invokes registered unload callbacks after a successful unload.
         for call in self.entry.async_on_unload.call_args_list:call.args[0]()
         for call in self.entry.async_on_unload.call_args_list:call.args[0]()
-        self.cancel.assert_called_once()
+        self.assertEqual(self.cancel.call_count, 2)
 
     async def test_auto_mode_subscribes_to_case_preserving_discovery(self):
         self.entry.data={'mqtt_mode':'auto','mqtt_base_topic':''}

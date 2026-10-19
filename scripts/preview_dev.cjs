@@ -3,15 +3,19 @@ const {chromium}=require(process.env.PLAYWRIGHT_MODULE||'playwright');
 const root=path.resolve(__dirname,'..'),out=path.join(root,'docs');
 const js=fs.readFileSync(path.join(root,'custom_components/lightshow_studio/static/lightshow-studio.js'),'utf8');
 const data=JSON.parse(fs.readFileSync(path.join(root,'tests/defaults-fixture.json'),'utf8'));
+// Fresh 2.3 catalogue; retain the fixture file as the saved older configuration.
+for(const p of data.packs)for(const scene of p.scenes)scene.tracks.other=JSON.parse(JSON.stringify(scene.tracks.upper));
 data.fixtures=data.fixtures.slice(0,2);data.fixtures.forEach((f,i)=>{f.entity_id='light.demo_'+i;f.friendly_name='Demo-Wandleuchte';f.role=i?'lower':'upper';f.endpoint=i?'bottom':'top';f.transport='zigbee2mqtt';});
 const html=`<!doctype html><html lang="de"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Lightshow Studio · lokale Entwicklungsvorschau</title>
 <style>body{margin:24px;background:#1c1c1c;color:#eee;font:14px Arial;--primary-text-color:#eee;--secondary-text-color:#aaa;--ha-card-background:#252525;--divider-color:#454545;--error-color:#d93b4c;--success-color:#3d9866;--ls-color-scheme:dark}main{max-width:1012px;margin:auto}.demo{font-size:13px;margin:0 auto 18px;max-width:1012px;line-height:1.6}.demo button{padding:9px 15px;background:#333;color:#eee;border:1px solid #777;border-radius:7px;cursor:pointer}</style>
-<div class="demo"><strong>Lokale Entwicklungsvorschau · 2.2 · gemischte Lampen</strong><br>Beispieldaten. Keine Verbindung zu Home Assistant oder echten Lampen.<br><button id="operation">Bedienung / Dashboard</button> <button id="configuration">Integration einrichten</button></div><main></main>
+<div class="demo"><strong>Lokale Entwicklungsvorschau · 2.3 · Studio A</strong><br>Beispieldaten. Keine Verbindung zu Home Assistant oder echten Lampen.<br><button id="operation">Bedienung / Dashboard</button> <button id="configuration">Integration einrichten</button></div><main></main>
 <script>${js}</script><script>
 const clone=x=>JSON.parse(JSON.stringify(x));window.requests=[];
 const original=${JSON.stringify(data)};
 let configuration={schema:3,areas:[['wall','Außenwand','🏠',0],['garden','Garten','🌿',2],['bath','Badewanne','🛁',3],['pool','Pool','🏊',4]].map(([id,name,icon,n])=>{const settings=clone(original);settings.fixtures=id==='wall'?settings.fixtures:[{...settings.fixtures[0],entity_id:'light.demo_'+n,role:'other',endpoint:'auto',friendly_name:'',transport:'homeassistant'}];return {id,name,icon,settings};})};
 let demoAreaSerial=0;
+// Garden represents an existing installation with the former "other = off" default.
+for(const p of configuration.areas.find(a=>a.id==='garden').settings.packs)for(const sc of p.scenes)sc.tracks.other.mode='off';
 let connection={mqtt_mode:'auto',mqtt_base_topic:''};
 const idle=()=>({running:false,pack_id:'',scene_id:'',program_id:'',source:'manual',previewing:[],warnings:[]});
 let states=Object.fromEntries(configuration.areas.map(a=>[a.id,idle()]));
@@ -56,6 +60,13 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  const page=await browser.newPage({viewport:{width:1060,height:1080}});const errors=[];page.on('pageerror',e=>errors.push(e.message));
  await page.goto('file:///'+path.join(out,'dev-preview.html').replace(/\\/g,'/'));
  await page.getByRole('tab',{name:'🎬 Shows',exact:true}).waitFor();
+ await page.screenshot({path:path.join(out,'studio-a-dashboard.png'),fullPage:true});
+ for(const width of [320,390]){
+  await page.setViewportSize({width,height:900});
+  assert(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth));
+  if(width===390)await page.screenshot({path:path.join(out,'studio-a-mobile.png'),fullPage:true});
+ }
+ await page.setViewportSize({width:1060,height:1080});
  assert.equal(await page.getByRole('tab',{name:'💡 Lampen',exact:true}).count(),0);
  await page.getByRole('switch',{name:/Zufälliger Szenenwechsel/}).check();
  await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
@@ -68,7 +79,7 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
  assert.equal(await page.evaluate(()=>requests.at(-1).changes.options.shuffle_interval),330);
  assert.equal(await page.evaluate(()=>requests.at(-1).changes.options.wind),true);
- await page.locator('details[data-folder="show-programs"] > summary').click();
+ assert.equal(await page.locator('details[data-folder="show-programs"]').getAttribute('open'),null);
  await page.getByRole('button',{name:'👻 Geisterhaus Lichtszene',exact:true}).click();
  assert.equal(await page.locator('details[data-folder="show-programs"]').getAttribute('open'),null);
  await page.locator('details[data-folder="show-programs"] > summary').click();
@@ -124,7 +135,9 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.screenshot({path:path.join(out,'dev-connection-dark.png'),fullPage:true});
  await page.getByRole('tab',{name:'💡 Lampen',exact:true}).click();
  await page.screenshot({path:path.join(out,'dev-configuration-dark.png'),fullPage:true});
+ await page.screenshot({path:path.join(out,'studio-a-configuration.png'),fullPage:true});
  for(const tab of ['🎛️ Editor','📦 Pakete']){await page.getByRole('tab',{name:tab,exact:true}).click();assert(!await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth));}
+ await page.locator('details[data-folder="library-backup"] > summary').click();
  await page.getByRole('button',{name:'⇧ Gesamte Konfiguration exportieren',exact:true}).click();
  assert.equal(JSON.parse(await page.getByLabel('Konfiguration (JSON)',{exact:true}).inputValue()).schema,3);
  await page.getByRole('tab',{name:'🏡 Bereiche',exact:true}).click();
@@ -139,7 +152,7 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.screenshot({path:path.join(out,'dev-area-create-form.png'),fullPage:true});
  await page.getByLabel('Name des neuen Bereichs',{exact:true}).press('Enter');
  assert.equal(await page.getByRole('button',{name:'Bereich Testbereich auswählen',exact:true}).count(),1);
- await page.locator('details[data-folder="area-overview"]').screenshot({path:path.join(out,'dev-area-created.png')});
+ await page.locator('.areaRail').screenshot({path:path.join(out,'dev-area-created.png')});
  await page.getByRole('button',{name:'Bedienung / Dashboard',exact:true}).click();
  await page.getByRole('button',{name:'Bereich Testbereich auswählen',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Bereich Testbereich auswählen',exact:true}).getAttribute('aria-pressed'),'true');
@@ -177,6 +190,12 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.getByRole('button',{name:'Integration einrichten',exact:true}).click();
  await page.getByRole('button',{name:'Bereich Garten auswählen',exact:true}).click();
  await page.getByRole('tab',{name:'💡 Lampen',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Für ausgeschaltete Andere-Gruppen die Oben-Einstellung übernehmen',exact:true}).count(),1);
+ await page.getByRole('button',{name:'Für ausgeschaltete Andere-Gruppen die Oben-Einstellung übernehmen',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Für ausgeschaltete Andere-Gruppen die Oben-Einstellung übernehmen',exact:true}).count(),0);
+ await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
+ assert.equal(await page.evaluate(()=>demoData('garden').settings.packs[0].scenes[0].tracks.other.mode),'candle');
+ await page.locator('details[data-folder="lamp-0"] > summary').click();
  assert.equal(await page.locator('[data-field="fixture-friend"]').count(),0);
  assert((await page.locator('[data-field="fixture-entity"]').innerText()).includes('Shelly'));
  assert((await page.locator('[data-field="fixture-entity"]').innerText()).includes('RGBWW'));
@@ -191,6 +210,7 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.locator('[data-field="fixture-entity"][data-index="2"]').selectOption('light.shelly_rgbw');
  await page.getByRole('button',{name:'＋ Lampe hinzufügen',exact:true}).click();
  await page.locator('[data-field="fixture-entity"][data-index="3"]').selectOption('light.wifi_rgbww');
+ await page.locator('details[data-folder="light-discovery"] > summary').click();
  await page.getByRole('button',{name:'↻ Erkennen',exact:true}).click();
  assert.equal(await page.locator('[data-field="fixture-friend"]').count(),1);
  await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
@@ -208,16 +228,19 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  assert.equal(await page.getByRole('button',{name:'★ Aus Favoriten entfernen',exact:true}).count(),1);
  await page.locator('[data-action="favorite-start"]').click();
  assert.equal(await page.evaluate(()=>demoData('wall').status.running),true);
+ await page.locator('details[data-folder="daily-timer"] > summary').click();
  await page.getByRole('button',{name:'30 Min. Timer',exact:true}).click();
  assert((await page.evaluate(()=>demoData('wall').status.stop_at))>Date.now()/1000);
  await page.getByRole('button',{name:'Timer entfernen',exact:true}).click();
  assert.equal(await page.evaluate(()=>demoData('wall').status.stop_at),null);
+ await page.locator('details[data-folder="daily-group"] > summary').click();
  await page.getByRole('checkbox',{name:'Außenwand gemeinsam bedienen',exact:true}).check();
  await page.getByRole('checkbox',{name:'Garten gemeinsam bedienen',exact:true}).check();
  await page.getByRole('button',{name:'▶ Markierte Bereiche starten',exact:true}).click();
  assert.equal(await page.evaluate(()=>demoData('garden').status.running),true);
  await page.getByRole('button',{name:'■ Markierte Bereiche stoppen',exact:true}).click();
  assert.equal(await page.evaluate(()=>demoData('wall').status.running||demoData('garden').status.running),false);
+ await page.locator('details[data-folder="daily-options"] > summary').click();
  await page.getByRole('switch',{name:'Shuffle ohne Wiederholungen',exact:true}).uncheck();
  await page.getByLabel('Übergang in Sekunden',{exact:true}).fill('3');
  await page.getByLabel('Übergang in Sekunden',{exact:true}).press('Tab');
@@ -230,13 +253,14 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.screenshot({path:path.join(out,'dev-daily-mobile.png'),fullPage:true});
  await page.setViewportSize({width:1060,height:1080});
  await page.getByRole('button',{name:'Integration einrichten',exact:true}).click();
+ await page.getByRole('tab',{name:'🏡 Bereiche',exact:true}).click();
  await page.getByRole('button',{name:'⧉ Bereich kopieren',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Bereich Außenwand (Kopie) auswählen',exact:true}).count(),1);
  assert.equal(await page.evaluate(()=>demoData(card._area).settings.fixtures.length),0);
  await page.screenshot({path:path.join(out,'dev-area-copy.png'),fullPage:true});
  assert.deepEqual(errors,[]);
  // Reproduce an old manual Lovelace resource loading before the new HA module.
- for(const version of ['v2','v2.1']){
+ for(const version of ['v2','v2.1','v2.2']){
   const legacyPage=await browser.newPage();
   const legacyErrors=[];legacyPage.on('pageerror',e=>legacyErrors.push(e.message));
   const legacy=fs.readFileSync(path.join(root,'tests','legacy-card-'+version+'.js'),'utf8');
@@ -257,5 +281,5 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
   assert.deepEqual(legacyErrors,[]);
   await legacyPage.close();
  }
- await browser.close();console.log('PASS: legacy v2/v2.1 frontend migration without YAML edits; mixed sources, favorites, area batches, timer, shuffle rounds, transitions, copy, existing flows, mobile and themes');
+ await browser.close();console.log('PASS: legacy v2/v2.1/v2.2 frontend migration without YAML edits; mixed sources, favorites, area batches, timer, shuffle rounds, transitions, copy, existing flows, mobile and themes');
 })().catch(e=>{console.error(e);process.exit(1)});
