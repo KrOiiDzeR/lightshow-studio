@@ -45,6 +45,7 @@ Object.assign(hass.states,{
  'light.free_demo':{state:'off',attributes:{friendly_name:'Neue Demolampe',supported_color_modes:['rgb']}},
  'light.shelly_rgbw':{state:'on',attributes:{friendly_name:'Shelly · RGBW-Streifen',supported_color_modes:['rgbw']}},
  'light.wifi_rgbww':{state:'on',attributes:{friendly_name:'WLAN · RGBWW-Poollicht',supported_color_modes:['rgbww']}},
+ 'switch.demo_lamp':{state:'on',attributes:{friendly_name:'Demo · Relaislampe'}},
  'light.zigbee_demo':{state:'off',attributes:{friendly_name:'Zigbee · Gartenleuchte',supported_color_modes:['xy']}}
 });
 for(const [id,s] of Object.entries(hass.states))if(!s.attributes.supported_color_modes)s.attributes.supported_color_modes=[id==='light.demo_2'?'rgbw':id==='light.demo_3'?'color_temp':id==='light.demo_4'?'rgbww':'rgb'];
@@ -132,6 +133,12 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.getByLabel('MQTT-Basisthema').fill('Home/Zigbee');
  await page.getByRole('button',{name:'Verbindung übernehmen',exact:true}).click();
  assert.equal(await page.evaluate(()=>requests.findLast(r=>r.type==='lightshow_studio/connection').connection.mqtt_base_topic),'Home/Zigbee');
+ await page.getByRole('checkbox',{name:'Lightshow Studio in der Seitenleiste anzeigen',exact:true}).uncheck();
+ await page.getByRole('button',{name:'Verbindung übernehmen',exact:true}).click();
+ assert.equal(await page.evaluate(()=>requests.findLast(r=>r.type==='lightshow_studio/connection').connection.show_sidebar),false);
+ assert.equal(await page.evaluate(()=>Object.hasOwn(requests.findLast(r=>r.type==='lightshow_studio/connection'),'area_id')),false);
+ await page.getByRole('checkbox',{name:'Lightshow Studio in der Seitenleiste anzeigen',exact:true}).check();
+ await page.getByRole('button',{name:'Verbindung übernehmen',exact:true}).click();
  await page.screenshot({path:path.join(out,'dev-connection-dark.png'),fullPage:true});
  await page.getByRole('tab',{name:'💡 Lampen',exact:true}).click();
  await page.screenshot({path:path.join(out,'dev-configuration-dark.png'),fullPage:true});
@@ -258,6 +265,13 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  assert.equal(await page.getByRole('button',{name:'Bereich Außenwand (Kopie) auswählen',exact:true}).count(),1);
  assert.equal(await page.evaluate(()=>demoData(card._area).settings.fixtures.length),0);
  await page.screenshot({path:path.join(out,'dev-area-copy.png'),fullPage:true});
+ await page.getByRole('tab',{name:'💡 Lampen',exact:true}).click();
+ await page.getByLabel('Lampenquelle',{exact:true}).selectOption('switch');
+ await page.getByRole('button',{name:'＋ Lampe hinzufügen',exact:true}).click();
+ assert.equal(await page.locator('[data-field="fixture-entity"]').inputValue(),'switch.demo_lamp');
+ assert(!(await page.locator('[data-field="fixture-entity"]').innerText()).includes('Shelly'));
+ await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
+ assert.equal(await page.evaluate(()=>demoData(card._area).settings.fixtures[0].role),'upper');
  assert.deepEqual(errors,[]);
  // Reproduce an old manual Lovelace resource loading before the new HA module.
  for(const version of ['v2','v2.1','v2.2']){
