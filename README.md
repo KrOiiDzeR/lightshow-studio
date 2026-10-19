@@ -1,6 +1,6 @@
 # ✨ Lightshow Studio
 
-> **Neu in 2.3.0-beta.1:** Studio A und Softwareeffekte für normale HA-Lampen. [Änderungen und Testanleitung](docs/TEST-2.3.md).
+> **Neu in 2.3.1-beta.1:** Klare Szenenzuordnung, Schaltaktoren als Lampen und ein ausblendbarer Seitenleisteneintrag. [Änderungen, Hardwaretests und Logo-Hinweis](docs/TEST-2.3.1.md).
 
 > **Neu in 2.2:** gemischte Lampenquellen, Favoriten, gemeinsame Bereichssteuerung, Timer, Shuffle-Runden, Bereichskopie und sanfte Übergänge. [Bedienung und Teststatus](docs/TEST-2.2.md).
 
@@ -8,7 +8,7 @@ Lokale Lichtshows für Home Assistant: Halloween, Weihnachten, Party und Ambient
 Szenen, JSON-Pakete, Show-Abläufe, Shuffle, Wind, Jahreszeiten und Wochenprogramm.
 Philips Hue Dymera wird über Zigbee2MQTT getrennt nach oben/unten unterstützt.
 
-**Version 2.3.0-beta.1.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
+**Version 2.3.1-beta.1.** Einrichtung vollständig über die Home-Assistant-Oberfläche; keine neuen YAML-Einträge und keine manuelle JavaScript-Ressource erforderlich.
 Voraussetzungen: Home Assistant **2026.10 oder neuer**, HACS und für native Dymera-Steuerung eine eingerichtete MQTT-/Zigbee2MQTT-Anbindung.
 Die Integration bleibt eine Beta. Automatische Prüfungen und Browserprüfungen mit Beispieldaten ersetzen keinen vollständigen Hardwaretest; den genauen Stand dokumentiert [VALIDATION.md](docs/VALIDATION.md).
 
@@ -17,6 +17,10 @@ Die Integration bleibt eine Beta. Automatische Prüfungen und Browserprüfungen 
 ## Alle Home-Assistant-Lampen verwenden
 
 Unter **Konfiguration → Lampen → Lampenquelle** zwischen **Home Assistant** und **Zigbee2MQTT** wählen. Home Assistant enthält alle verfügbaren `light.*`-Entitäten, einschließlich Shelly-/WLAN-Leuchten mit RGB, RGBW oder RGBWW. Diese Anbindung benötigt keine direkte MQTT-Verbindung und bleibt auch bei automatischer Erkennung ausdrücklich auf HA gestellt. Beide Anbindungen dürfen im selben Bereich vorkommen. Die Zigbee2MQTT-Auswahl zeigt erkannte, mit HA-Lichtentitäten verbundene Lampen; native Dymera-Effekte bleiben direkt, andere Z2M-Leuchten verwenden HA. Fähigkeiten und Anbindung werden pro Lampe angezeigt.
+
+Leuchten, die HA als `switch.*` bereitstellt, unter **Lampenquelle → Schaltaktor als Lampe (Ein/Aus)** ausdrücklich auswählen. Sie erhalten ausschließlich Schaltbefehle. Neue normale Lampen beginnen in der aktiven Gruppe **Hauptlicht / Oben**. Bei älteren Einrichtungen die Gruppenzuordnung prüfen: Eine gespeicherte Aus-Spur wird weiterhin ausgeschaltet; die Oberfläche zeigt dies jetzt vor dem Start an.
+
+Unter **Konfiguration → Verbindung** lässt sich der Seitenleisteneintrag mit einem kleinen Schalter global ein- oder ausblenden.
 
 ## Neue Bedienfunktionen
 
@@ -64,7 +68,7 @@ Konfiguration und Bedienung erfordern aktuell ein HA-Administratorkonto.
 ## Installation mit HACS – ohne Konfigurationsdateien
 
 1. In HACS **Menü → Benutzerdefinierte Repositories** öffnen und `https://github.com/KrOiiDzeR/lightshow-studio` als Typ **Integration** hinzufügen.
-2. **Lightshow Studio** öffnen und `v2.3.0-beta.1` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
+2. **Lightshow Studio** öffnen und `v2.3.1-beta.1` herunterladen. Falls nötig im Versionsdialog Vorabversionen auswählen. Für spätere Beta-Updates die von HACS bereitgestellte **Pre-release**-Entität aktivieren und einschalten.
 3. Home Assistant neu starten.
 4. **Einstellungen → Geräte & Dienste → Integration hinzufügen → Lightshow Studio** öffnen.
 5. Zigbee2MQTT-Erkennung auswählen: automatisch, eigene Bridge oder nur HA-Lampen. Ohne direkte MQTT-Anbindung stehen unterstützte Funktionen vorhandener HA-Lichtentitäten zur Verfügung.
