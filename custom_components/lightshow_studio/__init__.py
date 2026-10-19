@@ -34,6 +34,7 @@ from .discovery import base_topic, command_topic, device_list
 from .const import CONFIG_PATH, CONTROL_PATH, DOMAIN, MODULE_URL, VERSION
 from .planning import scheduled_target
 from .shuffle import shuffle_candidates
+from .ha_effects import frame as ha_effect_frame
 CONFIG_SCHEMA = vol.Schema({
     DOMAIN: vol.Any(None, vol.Schema({vol.Optional("mqtt_base_topic"): base_topic})),
 }, extra=vol.ALLOW_EXTRA)
@@ -71,7 +72,9 @@ class Studio:
         self.snapshots: dict[str, dict] = {}
         self.native: dict[str, tuple[str, str]] = {}
         self.preview_tasks: dict[str, asyncio.Task] = {}
+        self.preview_states: dict[str, tuple] = {}
         self.messages: list[str] = []
+        self.ha_effects: dict[str, dict] = {}
         self.migrated = False
         self.manual_stop_date: str | None = None
         self.last_shuffle = dt_util.now()
@@ -165,8 +168,10 @@ class Studio:
                 "rgbw_color": props.get("rgbw_color"), "rgbww_color": props.get("rgbww_color"), "xy_color": props.get("xy_color"),
                 "color_temp_kelvin": props.get("color_temp_kelvin"), "effect": props.get("effect")}
 
-    async def _apply(self, f: dict, cue: dict) -> str | None:
+    async def _apply(self, f: dict, cue: dict, *, effect_frame: bool = False) -> str | None:
         eid = f["entity_id"]
+        if not effect_frame:
+            self.ha_effects.pop(eid, None)
         st = self.hass.states.get(eid)
         if st is None or st.state in ("unavailable", "unknown"):
             return f"{eid}: Entität ist nicht verfügbar"
@@ -189,12 +194,12 @@ class Studio:
             return None
         if mode == "off" or cue["brightness"] == 0:
             off = {"entity_id": eid}
-            if self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
+            if not effect_frame and self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
                 off["transition"] = self.settings["options"]["transition"]
             await self.hass.services.async_call("light", "turn_off", off, blocking=True)
             return None
         kwargs = {"entity_id": eid}
-        if mode not in EFFECTS and self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
+        if not effect_frame and mode not in EFFECTS and self.settings["options"].get("transition", 0) and (st.attributes.get("supported_features", 0) & 32):
             kwargs["transition"] = self.settings["options"]["transition"]
         available = st.attributes.get("effect_list") or []
         color_modes = st.attributes.get("supported_color_modes") or []
@@ -206,25 +211,28 @@ class Studio:
             if mode in available:
                 kwargs["effect"] = mode
             else:
-                note = f"{eid}: Effekt {mode} nicht unterstützt; stattdessen warmes Licht"
-                if color_ok:
-                    kwargs["rgb_color"] = RGB["warm"]
-                elif "color_temp" in color_modes:
-                    low = st.attributes.get("min_color_temp_kelvin", 2000)
-                    high = st.attributes.get("max_color_temp_kelvin", 6500)
-                    kwargs["color_temp_kelvin"] = max(low, min(high, 2700))
+                # Run a software show through HA's public light actions. On/off
+                # lights only participate in explicit blinking, otherwise stay on.
+                dimmable = any(x != "onoff" for x in color_modes)
+                if dimmable or mode == "blink":
+                    warning = await self._apply(f, ha_effect_frame(cue, 0, sum(map(ord, eid))), effect_frame=True)
+                    self.ha_effects[eid] = {"fixture": dict(f), "cue": dict(cue),
+                        "started": dt_util.now().timestamp(), "last": dt_util.now().timestamp()}
+                    return warning
+                note = f"{eid}: nur Ein/Aus verfügbar; für {mode} eingeschaltet"
         elif color_ok:
             kwargs["rgb_color"] = mode_rgb(cue)
-        elif "color_temp" in color_modes and mode in ("warm", "white", "ice"):
+        elif "color_temp" in color_modes and (effect_frame or mode in ("warm", "white", "ice")):
             low = st.attributes.get("min_color_temp_kelvin", 2000)
             high = st.attributes.get("max_color_temp_kelvin", 6500)
-            kwargs["color_temp_kelvin"] = max(low, min(high, {"warm": 2700, "white": 4000, "ice": 6500}[mode]))
+            kwargs["color_temp_kelvin"] = max(low, min(high, cue.get("kelvin", {"warm": 2700, "white": 4000, "ice": 6500}.get(mode, 2700))))
         else:
             note = f"{eid}: keine Farbsteuerung unterstützt; {'nur Helligkeit gesetzt' if 'brightness' in kwargs else 'nur eingeschaltet'}"
         await self.hass.services.async_call("light", "turn_on", kwargs, blocking=True)
         return note
 
     async def _restore(self, eid: str, snapshot: dict, native: tuple[str, str] | None = None):
+        self.ha_effects.pop(eid, None)
         target = native or self.native.get(eid)
         if target:
             try:
@@ -332,6 +340,7 @@ class Studio:
     async def _stop_locked(self):
         self.stop_at = None
         self.shuffle_seen = set()
+        self.ha_effects.clear()
         if not self.running:
             return
         self.running = False
@@ -369,16 +378,22 @@ class Studio:
             target = self._dymera(f)
             warn = await self._apply(f, cue)
             self.messages = [warn] if warn else []
+            self.preview_states[eid] = (snapshot, target)
 
             async def finish():
                 try:
                     await asyncio.sleep(10)
-                finally:
-                    try:
+                    async with self._lock:
                         await self._restore(eid, snapshot, target)
-                    except Exception as err:
-                        _LOGGER.warning("Preview restore for %s failed: %s", eid, err)
+                except asyncio.CancelledError:
+                    # stop/start cancels previews while already holding _lock.
+                    # Restore here without trying to acquire it a second time.
+                    await self._restore(eid, snapshot, target)
+                except Exception as err:
+                    _LOGGER.warning("Preview restore for %s failed: %s", eid, err)
+                finally:
                     self.preview_tasks.pop(eid, None)
+                    self.preview_states.pop(eid, None)
 
             self.preview_tasks[eid] = self.hass.async_create_task(finish(), f"lightshow_preview_{eid}")
 
@@ -388,6 +403,33 @@ class Studio:
             task.cancel()
         if tasks:
             await asyncio.gather(*tasks, return_exceptions=True)
+        # A task cancelled before its first CPU turn never enters its finally.
+        for eid, (snapshot, target) in list(self.preview_states.items()):
+            try:
+                await self._restore(eid, snapshot, target)
+            finally:
+                self.preview_states.pop(eid, None)
+                self.preview_tasks.pop(eid, None)
+
+    async def effect_tick(self):
+        """Serialize frames with scene changes, previews and snapshot restoration."""
+        async with self._lock:
+            now = dt_util.now().timestamp()
+            for eid, active in list(self.ha_effects.items()):
+                if now - active["last"] < 2:
+                    continue
+                active["last"] = now
+                try:
+                    cue = ha_effect_frame(active["cue"], now - active["started"], sum(map(ord, eid)))
+                    if cue == active.get("sent"):
+                        continue
+                    warning = await self._apply(active["fixture"], cue, effect_frame=True)
+                    active["sent"] = cue
+                    if warning and warning not in self.messages:
+                        self.messages = (self.messages + [warning])[-15:]
+                except Exception as err:
+                    self.ha_effects.pop(eid, None)
+                    self.messages = (self.messages + [f"{eid}: HA-Effekt beendet: {err}"])[-15:]
 
     async def tick(self):
         now = dt_util.now()
@@ -724,6 +766,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     cancel = async_track_time_interval(hass, periodic, timedelta(seconds=5))
 
+    async def effect_periodic(_time: datetime):
+        async with studio._lock:
+            for area in studio.areas.values():
+                await area.effect_tick()
+
+    cancel_effects = async_track_time_interval(hass, effect_periodic, timedelta(seconds=2))
+
     closed = False
 
     @callback
@@ -734,6 +783,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         closed = True
         unsubscribe()
         cancel()
+        cancel_effects()
+        for area in studio.areas.values():
+            area.ha_effects.clear()
         for task in list(studio.preview_tasks.values()):
             task.cancel()
 
