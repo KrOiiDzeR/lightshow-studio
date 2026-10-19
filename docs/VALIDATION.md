@@ -1,3 +1,9 @@
+# Prüfstatus der 2.2-Beta
+
+81 Python-Tests, UI-Smoke-Test und interaktive Browserprüfung mit Beispieldaten bestanden. Details: [TEST-2.2.md](TEST-2.2.md). Native Konfiguration am 2.1-System geprüft; vollständige neue Hardwaretests bleiben ausstehend. Alte v2-/v2.1-Karten als Browser-Regressionsfälle geprüft. HACS/hassfest und Browserregression sind vor dem Release verpflichtend.
+
+## Vorheriger 2.1-Prüfstand
+
 # Prüfstatus der 2.1-Beta
 
 62 Python-Tests bestanden. Abgedeckt sind bisherige Einstellungen, Datenübernahme, MQTT-Routing, Wochenzeiten, Zeitgrenzen, Jahres-Event-Vorrang, Überschneidungen und die erlaubten Dashboard-Änderungen.

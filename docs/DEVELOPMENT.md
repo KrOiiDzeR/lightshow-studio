@@ -1,6 +1,8 @@
 # Entwicklung und Freigabe
 
-Zweig: `dev/configuration-ui`. Ausgangspunkt: lokaler beta.3-Stand `027f5cf`.
+Aktueller Testzweig: `dev/mixed-light-sources` (öffentliche Zusammenführung in 2.2.0-beta.2). Neuer Funktionsumfang und Grenzen: [TEST-2.2.md](TEST-2.2.md).
+
+Bisheriger Zweig: `dev/configuration-ui`. Ausgangspunkt: lokaler beta.3-Stand `027f5cf`.
 Die lokale Entwicklung bis `2.1.0-beta.5` wird in der öffentlichen Vorabversion `2.1.0-beta.6` zusammengeführt. Der Entwicklungszweig bleibt für weitere Arbeit erhalten.
 Die laufende Home-Assistant-Installation wurde nicht verändert.
 
