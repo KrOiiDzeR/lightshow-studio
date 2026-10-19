@@ -7,13 +7,15 @@
         "description": "Lampen, Szenen und Pakete richtest du anschließend über die Integration ein. Für Zigbee2MQTT die [MQTT-Integration](/config/integrations/integration/mqtt) einrichten. Ohne MQTT kannst du vorhandene Home-Assistant-Lampen verwenden.",
         "data": {
           "mqtt_mode": "Zigbee2MQTT-Erkennung",
-          "mqtt_base_topic": "MQTT-Basisthema (nur bei eigener Bridge)"
+          "mqtt_base_topic": "MQTT-Basisthema (nur bei eigener Bridge)",
+          "show_sidebar": "Lightshow Studio in der Seitenleiste anzeigen"
         }
       }
     },
     "error": {
       "invalid_topic": "Bitte ein gültiges Basisthema ohne + oder # eingeben.",
-      "mqtt_not_configured": "Bitte zuerst die MQTT-Integration einrichten oder nur HA-Lampen auswählen."
+      "mqtt_not_configured": "Bitte zuerst die MQTT-Integration einrichten oder nur HA-Lampen auswählen.",
+      "invalid_sidebar": "Ungültige Seitenleisteneinstellung."
     },
     "abort": {
       "already_configured": "Lightshow Studio ist bereits eingerichtet."
@@ -26,14 +28,16 @@
         "description": "[Lampen, Szenen und Pakete konfigurieren](/lightshow-studio-config)\n\nHier änderst du die Zigbee2MQTT-Anbindung. Broker-Zugangsdaten werden zentral in der [MQTT-Integration](/config/integrations/integration/mqtt) verwaltet.",
         "data": {
           "mqtt_mode": "Zigbee2MQTT-Erkennung",
-          "mqtt_base_topic": "MQTT-Basisthema (nur bei eigener Bridge)"
+          "mqtt_base_topic": "MQTT-Basisthema (nur bei eigener Bridge)",
+          "show_sidebar": "Lightshow Studio in der Seitenleiste anzeigen"
         }
       }
     },
     "error": {
       "invalid_topic": "Bitte ein gültiges Basisthema ohne + oder # eingeben.",
       "mqtt_not_configured": "Bitte zuerst die MQTT-Integration einrichten oder nur HA-Lampen auswählen.",
-      "show_running": "Bitte zuerst die laufende Show oder Vorschau beenden."
+      "show_running": "Bitte zuerst die laufende Show oder Vorschau beenden.",
+      "invalid_sidebar": "Ungültige Seitenleisteneinstellung."
     }
   },
   "selector": {

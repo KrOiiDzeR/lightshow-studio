@@ -7,13 +7,15 @@
         "description": "Configure lights, scenes and packs from the integration after setup. For Zigbee2MQTT, set up the [MQTT integration](/config/integrations/integration/mqtt). Existing Home Assistant lights can be used without MQTT.",
         "data": {
           "mqtt_mode": "Zigbee2MQTT discovery",
-          "mqtt_base_topic": "MQTT base topic (manual mode only)"
+          "mqtt_base_topic": "MQTT base topic (manual mode only)",
+          "show_sidebar": "Show Lightshow Studio in the sidebar"
         }
       }
     },
     "error": {
       "invalid_topic": "Enter a valid base topic without + or #.",
-      "mqtt_not_configured": "Set up MQTT first, or choose Home Assistant lights only."
+      "mqtt_not_configured": "Set up MQTT first, or choose Home Assistant lights only.",
+      "invalid_sidebar": "Invalid sidebar setting."
     },
     "abort": {
       "already_configured": "Lightshow Studio is already configured."
@@ -26,14 +28,16 @@
         "description": "[Configure lights, scenes and packs](/lightshow-studio-config)\n\nChange Zigbee2MQTT discovery here. Broker credentials are managed by the [MQTT integration](/config/integrations/integration/mqtt).",
         "data": {
           "mqtt_mode": "Zigbee2MQTT discovery",
-          "mqtt_base_topic": "MQTT base topic (manual mode only)"
+          "mqtt_base_topic": "MQTT base topic (manual mode only)",
+          "show_sidebar": "Show Lightshow Studio in the sidebar"
         }
       }
     },
     "error": {
       "invalid_topic": "Enter a valid base topic without + or #.",
       "mqtt_not_configured": "Set up MQTT first, or choose Home Assistant lights only.",
-      "show_running": "Stop the show or preview first."
+      "show_running": "Stop the show or preview first.",
+      "invalid_sidebar": "Invalid sidebar setting."
     }
   },
   "selector": {
