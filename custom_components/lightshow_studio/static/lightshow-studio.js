@@ -1,6 +1,9 @@
 /* Lightshow Studio 2.0 beta — self contained Home Assistant Lovelace card.
  * Event packs are ordinary JSON objects; no JS changes required to add packs.
  */
+// Both classic Lovelace resources and HA modules may load this file.
+// Keep declarations private even when the same build has several resource URLs.
+(()=>{
 const LS_ROLES = [['upper','🎨 Hauptlicht / Oben'],['lower','⬇️ Unten'],['entrance','🚪 Haustür'],['other','💡 Andere']];
 const LS_MODES = [
  ['candle','🕯️ Kerzenflackern'],['fireplace','🔥 Kaminfeuer'],['sparkle','✨ Funkeln'],
@@ -17,14 +20,17 @@ const LS_COPY = data => JSON.parse(JSON.stringify(data));
 const LS_CUE = () => ({mode:'candle',brightness:65,speed:55,color:'#FF8730'});
 const LS_COLORS = {halloween:'#f69e42',christmas:'#5bc49c',party:'#b596ff',ambience:'#8cd4db'};
 const LS_DEF = (role) => role==='upper'?'top':role==='lower'?'bottom':'auto';
-const LS_BUILD = '2.3.1-beta.1';
+const LS_BUILD = '2.3.2-beta.1';
 const LS_CONTROL_TAG = 'lightshow-studio-control-'+LS_BUILD.replace(/[^a-z0-9]/g,'-');
 const LS_CONFIG_TAG = 'lightshow-studio-config-'+LS_BUILD.replace(/[^a-z0-9]/g,'-');
 
 // HA can load an old Lovelace resource before the current integration module.
 // Keep existing card YAML working by delegating old elements to the current build.
 function LS_REGISTER(name, implementation, currentTag){
- if(!customElements.get(currentTag))customElements.define(currentTag,class extends implementation{});
+ // A second URL for this build must not patch its own base class into a delegate.
+ // Its versioned subclass would inherit that patch and recurse forever.
+ if(customElements.get(currentTag))return;
+ customElements.define(currentTag,class extends implementation{});
  const previous=customElements.get(name);
  if(!previous){customElements.define(name,implementation);return;}
  const delegate=host=>{
@@ -411,3 +417,4 @@ class LightshowStudioPanel extends HTMLElement {
  }
 }
 if(!customElements.get('lightshow-studio-panel'))customElements.define('lightshow-studio-panel',LightshowStudioPanel);
+})();
