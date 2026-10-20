@@ -1,5 +1,12 @@
 # Änderungen
 
+## 2.3.2-beta.1
+
+- Leere Bedien- und Konfigurationsseiten bei mehrfach geladenen Ressourcen behoben: dieselbe Frontend-Version wird nur einmal registriert. Zusätzliche Ressourcenadressen dürfen keine rekursive Weiterleitung der eigenen Kartenklasse erzeugen.
+- JavaScript-Deklarationen sind lokal gekapselt. Alte klassische Lovelace-Ressourcen und automatisch geladene HA-Module können dieselbe Version ohne Namenskonflikte laden.
+- Browserprüfungen decken mehrere Ressourcenadressen, klassische Skripte, Module, beide nativen HA-Panels und die Migration von v2 bis 2.3.1 ab. Bestehende Bereiche, Szenen und Lampensteuerung bleiben unverändert; keine erneuten Hardware-Schalttests.
+- Automatische Push-Prüfungen laufen auf `main`; vollständige Pull Requests werden weiterhin geprüft. Dateiweise vorbereitete Release-Zweige erzeugen so keine irreführenden roten Zwischenläufe mehr. Manuelle Prüfungen bleiben verfügbar.
+
 ## 2.3.1-beta.1
 
 - Normale neue Lampen und ausdrücklich als Lampen ausgewählte Schaltaktoren verwenden die aktive Hauptspur statt der früher ausgeschalteten Gruppe „Andere“. Gespeicherte Szenen werden nicht automatisch umgeschrieben.
