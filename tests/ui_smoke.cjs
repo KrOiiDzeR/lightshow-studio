@@ -8,6 +8,10 @@ const context={
   window:{customCards:[],setInterval:()=>1,clearInterval:()=>{},prompt:()=>"Test",confirm:()=>true},
 };
 vm.runInNewContext(js,context);
+const registered=classes.get('lightshow-studio'),render=registered.prototype._render;
+vm.runInNewContext(js,context);vm.runInNewContext(js,context);
+assert.equal(classes.get('lightshow-studio'),registered);
+assert.equal(registered.prototype._render,render,'repeated loads must not replace the current render method with a recursive delegate');
 const card=new (classes.get('lightshow-studio'))();card._settings=data;card._pack='halloween';card._scene='castle';card._data={settings:data,devices:[],suggestions:{},migrated:false,status:{running:false,pack_id:'',scene_id:'',previewing:[],warnings:[]}};
 card._hass={states:Object.fromEntries(data.fixtures.map(x=>[x.entity_id,{attributes:{friendly_name:x.entity_id},state:'on'}]))};
 Object.defineProperty(card,'isConnected',{get:()=>true});
