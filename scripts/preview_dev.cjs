@@ -273,8 +273,30 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
  await page.getByRole('button',{name:'✓ Speichern',exact:true}).click();
  assert.equal(await page.evaluate(()=>demoData(card._area).settings.fixtures[0].role),'upper');
  assert.deepEqual(errors,[]);
+ // HA extra modules and old/manual Lovelace resources can serve one build at
+ // distinct URLs. Re-registering that build used to make its delegate recurse.
+ await page.evaluate(()=>{window.beforeReloadCard=card;window.beforeReloadData=JSON.stringify(card._settings);window.beforeReloadClass=customElements.get('lightshow-studio');});
+ await page.route('https://lightshow.test/**',route=>route.fulfill({contentType:'text/javascript',headers:{'access-control-allow-origin':'*'},body:js}));
+ for(const [i,type] of ['module','text/javascript','module','text/javascript'].entries()){
+  await page.addScriptTag({url:'https://lightshow.test/lightshow-studio.js?resource='+i,type});
+  assert.equal(await page.evaluate(()=>customElements.get('lightshow-studio')===beforeReloadClass),true);
+  assert.equal(await page.evaluate(()=>card===beforeReloadCard&&JSON.stringify(card._settings)===beforeReloadData),true);
+ }
+ // Exercise native HA panel mounting as well as the Lovelace cards.
+ for(const mode of ['operation','configuration'])for(const connectedFirst of [false,true]){
+  await page.evaluate(({mode,connectedFirst})=>{
+   const panel=document.createElement('lightshow-studio-panel');panel.id='native-panel-test';
+   if(connectedFirst)document.body.append(panel);
+   panel.hass=hass;panel.panel={config:{mode}};
+   if(!connectedFirst)document.body.append(panel);
+  },{mode,connectedFirst});
+  const panel=page.locator('#native-panel-test');
+  await panel.getByRole('tab',{name:mode==='configuration'?'💡 Lampen':'🎬 Shows',exact:true}).waitFor();
+  await page.evaluate(()=>document.querySelector('#native-panel-test').remove());
+ }
+ assert.deepEqual(errors,[]);
  // Reproduce an old manual Lovelace resource loading before the new HA module.
- for(const version of ['v2','v2.1','v2.2']){
+ for(const version of ['v2','v2.1','v2.2','v2.3.1']){
   const legacyPage=await browser.newPage();
   const legacyErrors=[];legacyPage.on('pageerror',e=>legacyErrors.push(e.message));
   const legacy=fs.readFileSync(path.join(root,'tests','legacy-card-'+version+'.js'),'utf8');
@@ -292,8 +314,13 @@ fs.writeFileSync(path.join(out,'dev-preview.html'),html);
   await legacyPage.getByLabel('Lampenquelle',{exact:true}).waitFor();
   await legacyPage.getByRole('button',{name:'Bedienung / Dashboard',exact:true}).click();
   await legacyPage.getByRole('button',{name:'★ Aus Favoriten entfernen',exact:true}).waitFor();
+  for(const mode of ['configuration','operation']){
+   await legacyPage.evaluate(mode=>{const p=document.createElement('lightshow-studio-panel');p.id='upgraded-panel';p.panel={config:{mode}};p.hass=hass;document.body.append(p);},mode);
+   await legacyPage.locator('#upgraded-panel').getByRole('tab',{name:mode==='configuration'?'💡 Lampen':'🎬 Shows',exact:true}).waitFor();
+   await legacyPage.evaluate(()=>document.querySelector('#upgraded-panel').remove());
+  }
   assert.deepEqual(legacyErrors,[]);
   await legacyPage.close();
  }
- await browser.close();console.log('PASS: legacy v2/v2.1/v2.2 frontend migration without YAML edits; mixed sources, favorites, area batches, timer, shuffle rounds, transitions, copy, existing flows, mobile and themes');
+ await browser.close();console.log('PASS: repeated classic/module resource URLs and native panels; legacy v2/v2.1/v2.2/v2.3.1 migration; mixed sources, favorites, area batches, timer, shuffle rounds, transitions, copy, mobile and themes');
 })().catch(e=>{console.error(e);process.exit(1)});
