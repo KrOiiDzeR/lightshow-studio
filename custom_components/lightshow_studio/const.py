@@ -1,6 +1,6 @@
 """Shared integration and frontend constants."""
 DOMAIN = "lightshow_studio"
-VERSION = "2.3.1-beta.1"
+VERSION = "2.3.2-beta.1"
 MODULE_URL = f"/{DOMAIN}/lightshow-studio.js?v={VERSION}"
 CONFIG_PATH = "lightshow-studio-config"
 CONTROL_PATH = "lightshow-studio"
